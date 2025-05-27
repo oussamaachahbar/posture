@@ -87,6 +87,31 @@
             transform: translateY(-2px);
             box-shadow: 0 4px 10px rgba(212, 175, 55, 0.5);
         }
+        select {
+            background: #2d3748;
+            color: #e2e8f0;
+            border: 2px solid #d4af37;
+            border-radius: 10px;
+            padding: 0.5rem;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+        select:hover {
+            background: #4a5568;
+        }
+        .personal-info {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+            margin-bottom: 1rem;
+        }
+        .personal-info img {
+            width: 50px;
+            height: 50px;
+            border-radius: 50%;
+            border: 2px solid #d4af37;
+            object-fit: cover;
+        }
         @keyframes pulse {
             0% { opacity: 1; }
             50% { opacity: 0.6; }
@@ -114,19 +139,30 @@
     </style>
 </head>
 <body class="min-h-screen flex flex-col items-center">
-    <h1 class="text-center mb-8">Postural Analysis System</h1>
+    <h1 class="text-center mb-8" id="title">Postural Analysis System</h1>
     <div class="container flex flex-col md:flex-row gap-8 w-full">
+        <div class="flex-1">
+            <div class="personal-info premium-card">
+                <img src="https://via.placeholder.com/50" alt="Kamal's Photo">
+                <button id="personalButton">Kamal</button>
+                <select id="languageSelect" onchange="changeLanguage()">
+                    <option value="en">English</option>
+                    <option value="fr">Français</option>
+                    <option value="ar">العربية</option>
+                </select>
+            </div>
+        </div>
         <div id="analyseView" class="flex-1 relative">
             <video id="video" autoplay class="mb-4"></video>
             <canvas id="canvas" class="mb-4"></canvas>
             <div class="flex gap-4 flex-wrap justify-center">
-                <button onclick="startAnalysis()" class="mb-2">Start Analysis</button>
-                <button onclick="switchCamera()" class="mb-2">Switch Camera</button>
+                <button id="startButton" onclick="startAnalysis()">Start Analysis</button>
+                <button id="switchButton" onclick="switchCamera()">Switch Camera</button>
             </div>
             <div id="analysis" class="p-6 mt-6">
-                <p class="text-lg">Postural Status: <span id="postureStatus">Waiting for analysis...</span></p>
+                <p class="text-lg" id="postureStatusLabel">Postural Status: <span id="postureStatus">Waiting for analysis...</span></p>
                 <div id="postureDetails" class="premium-card hidden mt-4">
-                    <p class="text-lg font-semibold text-yellow-400">Posture Feedback:</p>
+                    <p class="text-lg font-semibold text-yellow-400" id="feedbackLabel">Posture Feedback:</p>
                     <ul id="postureList" class="list-disc list-inside mt-2"></ul>
                 </div>
             </div>
@@ -134,6 +170,147 @@
     </div>
 
     <script>
+        const translations = {
+            en: {
+                title: "Postural Analysis System",
+                startButton: "Start Analysis",
+                switchButton: "Switch Camera",
+                postureStatusLabel: "Postural Status: ",
+                feedbackLabel: "Posture Feedback:",
+                waiting: "Waiting for analysis...",
+                analyzing: "Analyzing posture...",
+                noPerson: "No person detected",
+                components: {
+                    head: "Head",
+                    neck: "Neck",
+                    shoulders: "Shoulders",
+                    back: "Back",
+                    elbows: "Elbows",
+                    wrists: "Wrists",
+                    thighs: "Thighs",
+                    knees: "Knees",
+                    feet: "Feet"
+                },
+                details: {
+                    headForward: "Head tilted forward",
+                    headBackward: "Head tilted backward",
+                    headRotated: "Head rotated",
+                    neckTilted: "Neck tilted",
+                    neckTwisted: "Neck twisted",
+                    shouldersAsymmetric: "Asymmetric shoulders",
+                    shouldersContracted: "Contracted shoulders",
+                    backForward: "Back too bent forward",
+                    backBackward: "Back too bent backward",
+                    elbowLeft: "Left elbow mispositioned",
+                    elbowRight: "Right elbow mispositioned",
+                    wristLeft: "Left wrist bent",
+                    wristRight: "Right wrist bent",
+                    thighLeft: "Left thigh mispositioned",
+                    thighRight: "Right thigh mispositioned",
+                    kneeLeft: "Left knee mispositioned",
+                    kneeRight: "Right knee mispositioned",
+                    feetCrossed: "Legs crossed or suspended",
+                    correct: "Correct position"
+                }
+            },
+            fr: {
+                title: "Système d'Analyse Posturale",
+                startButton: "Démarrer l'Analyse",
+                switchButton: "Changer de Caméra",
+                postureStatusLabel: "État de la Posture : ",
+                feedbackLabel: "Retour sur la Posture :",
+                waiting: "En attente d'analyse...",
+                analyzing: "Analyse de la posture...",
+                noPerson: "Aucune personne détectée",
+                components: {
+                    head: "Tête",
+                    neck: "Cou",
+                    shoulders: "Épaules",
+                    back: "Dos",
+                    elbows: "Coudes",
+                    wrists: "Poignets",
+                    thighs: "Cuisses",
+                    knees: "Genoux",
+                    feet: "Pieds"
+                },
+                details: {
+                    headForward: "Tête penchée vers l'avant",
+                    headBackward: "Tête penchée vers l'arrière",
+                    headRotated: "Tête tournée",
+                    neckTilted: "Cou incliné",
+                    neckTwisted: "Cou tordu",
+                    shouldersAsymmetric: "Épaules asymétriques",
+                    shouldersContracted: "Épaules contractées",
+                    backForward: "Dos trop penché en avant",
+                    backBackward: "Dos trop penché en arrière",
+                    elbowLeft: "Coude gauche mal positionné",
+                    elbowRight: "Coude droit mal positionné",
+                    wristLeft: "Poignet gauche cassé",
+                    wristRight: "Poignet droit cassé",
+                    thighLeft: "Cuisse gauche mal positionnée",
+                    thighRight: "Cuisse droite mal positionnée",
+                    kneeLeft: "Genou gauche mal positionné",
+                    kneeRight: "Genou droit mal positionné",
+                    feetCrossed: "Jambes croisées ou suspendues",
+                    correct: "Position correcte"
+                }
+            },
+            ar: {
+                title: "نظام تحليل الوضعية",
+                startButton: "بدء التحليل",
+                switchButton: "تبديل الكاميرا",
+                postureStatusLabel: "حالة الوضعية: ",
+                feedbackLabel: "تعليقات الوضعية:",
+                waiting: "في انتظار التحليل...",
+                analyzing: "جارٍ تحليل الوضعية...",
+                noPerson: "لم يتم اكتشاف أي شخص",
+                components: {
+                    head: "الرأس",
+                    neck: "الرقبة",
+                    shoulders: "الأكتاف",
+                    back: "الظهر",
+                    elbows: "الأكواع",
+                    wrists: "المعصمان",
+                    thighs: "الفخذان",
+                    knees: "الركبتان",
+                    feet: "القدمان"
+                },
+                details: {
+                    headForward: "الرأس مائل للأمام",
+                    headBackward: "الرأس مائل للخلف",
+                    headRotated: "الرأس متجه جانبيًا",
+                    neckTilted: "الرقبة مائلة",
+                    neckTwisted: "الرقبة ملتوية",
+                    shouldersAsymmetric: "الأكتاف غير متماثلة",
+                    shouldersContracted: "الأكتاف منقبضة",
+                    backForward: "الظهر مائل للأمام كثيرًا",
+                    backBackward: "الظهر مائل للخلف كثيرًا",
+                    elbowLeft: "الكوع الأيسر في وضع غير صحيح",
+                    elbowRight: "الكوع الأيمن في وضع غير صحيح",
+                    wristLeft: "المعصم الأيسر مثني",
+                    wristRight: "المعصم الأيمن مثني",
+                    thighLeft: "الفخذ الأيسر في وضع غير صحيح",
+                    thighRight: "الفخذ الأيمن في وضع غير صحيح",
+                    kneeLeft: "الركبة اليسرى في وضع غير صحيح",
+                    kneeRight: "الركبة اليمنى في وضع غير صحيح",
+                    feetCrossed: "الساقان متقاطعتان أو معلقتان",
+                    correct: "الوضعية صحيحة"
+                }
+            }
+        };
+
+        let currentLanguage = 'en';
+
+        function changeLanguage() {
+            currentLanguage = document.getElementById('languageSelect').value;
+            const t = translations[currentLanguage];
+            document.getElementById('title').textContent = t.title;
+            document.getElementById('startButton').textContent = t.startButton;
+            document.getElementById('switchButton').textContent = t.switchButton;
+            document.getElementById('postureStatusLabel').innerHTML = `${t.postureStatusLabel}<span id="postureStatus">${t.waiting}</span>`;
+            document.getElementById('feedbackLabel').textContent = t.feedbackLabel;
+        }
+
         const videoElement = document.getElementById('video');
         const canvasElement = document.getElementById('canvas');
         const canvasCtx = canvasElement.getContext('2d');
@@ -181,7 +358,7 @@
 
         function startAnalysis() {
             camera.start();
-            postureStatus.textContent = 'Analyzing posture...';
+            postureStatus.textContent = translations[currentLanguage].analyzing;
             postureDetails.classList.remove('hidden');
             canvasElement.width = analyseView.clientWidth;
             canvasElement.height = canvasElement.width * (480 / 640);
@@ -200,7 +377,7 @@
                     facingMode: currentFacingMode
                 });
                 await camera.start();
-                postureStatus.textContent = `Analyzing posture (${currentFacingMode === 'environment' ? 'Back' : 'Front'} camera)...`;
+                postureStatus.textContent = `${translations[currentLanguage].analyzing} (${currentFacingMode === 'environment' ? translations[currentLanguage].components.back : 'Front'} camera)...`;
             } catch (error) {
                 alert('Error switching camera: ' + error.message);
             }
@@ -215,7 +392,7 @@
                 const analysis = analyzePosture(results.poseLandmarks);
                 displayAnalysis(analysis);
             } else {
-                postureStatus.textContent = 'Aucune personne détectée';
+                postureStatus.textContent = translations[currentLanguage].noPerson;
                 postureList.innerHTML = '';
                 postureDetails.classList.add('hidden');
             }
@@ -244,15 +421,15 @@
         function analyzePosture(landmarks) {
             const analysis = {
                 person_detected: true,
-                head: { status: 'Correcte', details: 'Position correcte' },
-                neck: { status: 'Correcte', details: 'Position correcte' },
-                shoulders: { status: 'Correcte', details: 'Position correcte' },
-                back: { status: 'Correcte', details: 'Position correcte', position: null },
-                elbows: { left: null, right: null, status: 'Correcte', details: 'Position correcte' },
-                wrists: { left: null, right: null, status: 'Correcte', details: 'Position correcte' },
-                thighs: { left: null, right: null, status: 'Correcte', details: 'Position correcte' },
-                knees: { left: null, right: null, status: 'Correcte', details: 'Position correcte' },
-                feet: { left: null, right: null, status: 'Correcte', details: 'Position correcte' },
+                head: { status: 'Correcte', details: translations[currentLanguage].details.correct },
+                neck: { status: 'Correcte', details: translations[currentLanguage].details.correct },
+                shoulders: { status: 'Correcte', details: translations[currentLanguage].details.correct },
+                back: { status: 'Correcte', details: translations[currentLanguage].details.correct, position: null },
+                elbows: { left: null, right: null, status: 'Correcte', details: translations[currentLanguage].details.correct },
+                wrists: { left: null, right: null, status: 'Correcte', details: translations[currentLanguage].details.correct },
+                thighs: { left: null, right: null, status: 'Correcte', details: translations[currentLanguage].details.correct },
+                knees: { left: null, right: null, status: 'Correcte', details: translations[currentLanguage].details.correct },
+                feet: { left: null, right: null, status: 'Correcte', details: translations[currentLanguage].details.correct },
                 global_posture: 'Correcte',
                 details: ''
             };
@@ -280,20 +457,20 @@
 
             if (Math.abs(headInclination) > postureThresholds.head_inclination) {
                 analysis.head.status = 'Incorrecte';
-                analysis.head.details = headInclination > 0 ? 'Tête penchée vers l\'avant' : 'Tête penchée vers l\'arrière';
+                analysis.head.details = headInclination > 0 ? translations[currentLanguage].details.headForward : translations[currentLanguage].details.headBackward;
             }
             if (Math.abs(headRotation) > postureThresholds.head_rotation) {
                 analysis.head.status = 'Incorrecte';
-                analysis.head.details += analysis.head.details.includes('penchée') ? ' | Tête tournée' : 'Tête tournée';
+                analysis.head.details += analysis.head.details.includes('penchée') || analysis.head.details.includes('مائل') ? ` | ${translations[currentLanguage].details.headRotated}` : translations[currentLanguage].details.headRotated;
             }
 
             if (Math.abs(headInclination) > postureThresholds.head_inclination * 0.7) {
                 analysis.neck.status = 'Incorrecte';
-                analysis.neck.details = 'Cou incliné';
+                analysis.neck.details = translations[currentLanguage].details.neckTilted;
             }
             if (Math.abs(headRotation) > postureThresholds.head_rotation * 0.7) {
                 analysis.neck.status = 'Incorrecte';
-                analysis.neck.details += analysis.neck.details.includes('incliné') ? ' | Cou tordu' : 'Cou tordu';
+                analysis.neck.details += analysis.neck.details.includes('incliné') || analysis.neck.details.includes('مائل') ? ` | ${translations[currentLanguage].details.neckTwisted}` : translations[currentLanguage].details.neckTwisted;
             }
 
             const shoulderHeightDiff = Math.abs(leftShoulder.y - rightShoulder.y);
@@ -307,19 +484,19 @@
 
             if (shoulderHeightDiff > postureThresholds.shoulder_height_diff) {
                 analysis.shoulders.status = 'Incorrecte';
-                analysis.shoulders.details = 'Épaules asymétriques';
+                analysis.shoulders.details = translations[currentLanguage].details.shouldersAsymmetric;
             }
             if (Math.abs(shoulderHipAlignmentLeft) > 0.1 || Math.abs(shoulderHipAlignmentRight) > 0.1) {
                 analysis.shoulders.status = 'Incorrecte';
-                analysis.shoulders.details += analysis.shoulders.details.includes('asymétriques') ? ' | Épaules contractées' : 'Épaules contractées';
+                analysis.shoulders.details += analysis.shoulders.details.includes('asymétriques') || analysis.shoulders.details.includes('غير متماثلة') ? ` | ${translations[currentLanguage].details.shouldersContracted}` : translations[currentLanguage].details.shouldersContracted;
             }
 
             if (backAngle < postureThresholds.back_angle_min) {
                 analysis.back.status = 'Incorrecte';
-                analysis.back.details = 'Dos trop penché en avant';
+                analysis.back.details = translations[currentLanguage].details.backForward;
             } else if (backAngle > postureThresholds.back_angle_max) {
                 analysis.back.status = 'Incorrecte';
-                analysis.back.details = 'Dos trop penché en arrière';
+                analysis.back.details = translations[currentLanguage].details.backBackward;
             }
 
             analysis.elbows.left = calculateAngle(leftShoulder, leftElbow, leftWrist);
@@ -329,20 +506,20 @@
 
             if (analysis.elbows.left < postureThresholds.elbow_angle_min || analysis.elbows.left > postureThresholds.elbow_angle_max) {
                 analysis.elbows.status = 'Incorrecte';
-                analysis.elbows.details = 'Coude gauche mal positionné';
+                analysis.elbows.details = translations[currentLanguage].details.elbowLeft;
             }
             if (analysis.elbows.right < postureThresholds.elbow_angle_min || analysis.elbows.right > postureThresholds.elbow_angle_max) {
                 analysis.elbows.status = 'Incorrecte';
-                analysis.elbows.details += analysis.elbows.details.includes('gauche') ? ' | Coude droit mal positionné' : 'Coude droit mal positionné';
+                analysis.elbows.details += analysis.elbows.details.includes('gauche') || analysis.elbows.details.includes('الأيسر') ? ` | ${translations[currentLanguage].details.elbowRight}` : translations[currentLanguage].details.elbowRight;
             }
 
             if (Math.abs(analysis.wrists.left) > postureThresholds.wrist_angle_max) {
                 analysis.wrists.status = 'Incorrecte';
-                analysis.wrists.details = 'Poignet gauche cassé';
+                analysis.wrists.details = translations[currentLanguage].details.wristLeft;
             }
             if (Math.abs(analysis.wrists.right) > postureThresholds.wrist_angle_max) {
                 analysis.wrists.status = 'Incorrecte';
-                analysis.wrists.details += analysis.wrists.details.includes('gauche') ? ' | Poignet droit cassé' : 'Poignet droit cassé';
+                analysis.wrists.details += analysis.wrists.details.includes('gauche') || analysis.wrists.details.includes('الأيسر') ? ` | ${translations[currentLanguage].details.wristRight}` : translations[currentLanguage].details.wristRight;
             }
 
             analysis.thighs.left = calculateVerticalAngle(leftHip, leftKnee);
@@ -352,25 +529,25 @@
 
             if (analysis.thighs.left < postureThresholds.thigh_angle_min || analysis.thighs.left > postureThresholds.thigh_angle_max) {
                 analysis.thighs.status = 'Incorrecte';
-                analysis.thighs.details = 'Cuisse gauche mal positionnée';
+                analysis.thighs.details = translations[currentLanguage].details.thighLeft;
             }
             if (analysis.thighs.right < postureThresholds.thigh_angle_min || analysis.thighs.right > postureThresholds.thigh_angle_max) {
                 analysis.thighs.status = 'Incorrecte';
-                analysis.thighs.details += analysis.thighs.details.includes('gauche') ? ' | Cuisse droite mal positionnée' : 'Cuisse droite mal positionnée';
+                analysis.thighs.details += analysis.thighs.details.includes('gauche') || analysis.thighs.details.includes('الأيسر') ? ` | ${translations[currentLanguage].details.thighRight}` : translations[currentLanguage].details.thighRight;
             }
 
             if (analysis.knees.left < postureThresholds.knee_angle_min || analysis.knees.left > postureThresholds.knee_angle_max) {
                 analysis.knees.status = 'Incorrecte';
-                analysis.knees.details = 'Genou gauche mal positionné';
+                analysis.knees.details = translations[currentLanguage].details.kneeLeft;
             }
             if (analysis.knees.right < postureThresholds.knee_angle_min || analysis.knees.right > postureThresholds.knee_angle_max) {
                 analysis.knees.status = 'Incorrecte';
-                analysis.knees.details += analysis.knees.details.includes('gauche') ? ' | Genou droit mal positionné' : 'Genou droit mal positionné';
+                analysis.knees.details += analysis.knees.details.includes('gauche') || analysis.knees.details.includes('الأيسر') ? ` | ${translations[currentLanguage].details.kneeRight}` : translations[currentLanguage].details.kneeRight;
             }
 
             if (Math.abs(leftAnkle.y - rightAnkle.y) > 0.1) {
                 analysis.feet.status = 'Incorrecte';
-                analysis.feet.details = 'Jambes croisées ou suspendues';
+                analysis.feet.details = translations[currentLanguage].details.feetCrossed;
             }
 
             const components = ['head', 'neck', 'shoulders', 'back', 'elbows', 'wrists', 'thighs', 'knees', 'feet'];
@@ -411,15 +588,15 @@
 
             postureList.innerHTML = '';
             const components = [
-                { key: 'head', label: 'Tête' },
-                { key: 'neck', label: 'Cou' },
-                { key: 'shoulders', label: 'Épaules' },
-                { key: 'back', label: 'Dos' },
-                { key: 'elbows', label: 'Coudes' },
-                { key: 'wrists', label: 'Poignets' },
-                { key: 'thighs', label: 'Cuisses' },
-                { key: 'knees', label: 'Genoux' },
-                { key: 'feet', label: 'Pieds' }
+                { key: 'head', label: translations[currentLanguage].components.head },
+                { key: 'neck', label: translations[currentLanguage].components.neck },
+                { key: 'shoulders', label: translations[currentLanguage].components.shoulders },
+                { key: 'back', label: translations[currentLanguage].components.back },
+                { key: 'elbows', label: translations[currentLanguage].components.elbows },
+                { key: 'wrists', label: translations[currentLanguage].components.wrists },
+                { key: 'thighs', label: translations[currentLanguage].components.thighs },
+                { key: 'knees', label: translations[currentLanguage].components.knees },
+                { key: 'feet', label: translations[currentLanguage].components.feet }
             ];
 
             for (const { key, label } of components) {
