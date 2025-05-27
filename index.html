@@ -3,89 +3,68 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Advanced Postural Analysis System</title>
+    <title>Postural Analysis System</title>
     <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
     <script src="https://cdn.jsdelivr.net/npm/@mediapipe/pose@0.5/pose.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/@mediapipe/camera_utils/camera_utils.js"></script>
     <style>
         body {
             background: linear-gradient(135deg, #1a202c 0%, #2d3748 100%);
-            font-family: 'Inter', sans-serif;
+            font-family: 'Arial', sans-serif;
             color: #e2e8f0;
-            margin: 0;
-            min-height: 100vh;
-            display: flex;
-            flex-direction: column;
+            overflow-x: hidden;
         }
         h1 {
-            font-family: 'Montserrat', sans-serif;
+            font-family: 'Georgia', serif;
             font-size: 2.5rem;
-            font-weight: 700;
             color: #ffd700;
-            text-shadow: 2px 2px 6px rgba(0, 0, 0, 0.6);
-            text-align: center;
-            margin: 1.5rem 0;
-        }
-        .container {
-            max-width: 1280px;
-            margin: 0 auto;
-            padding: 1rem;
-            display: flex;
-            flex-direction: row;
-            gap: 1.5rem;
-            flex: 1;
-        }
-        .left-panel {
-            flex: 1;
-            max-width: 400px;
-            display: flex;
-            flex-direction: column;
-            gap: 1.5rem;
-        }
-        .right-panel {
-            flex: 2;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            gap: 1.5rem;
+            text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.5);
         }
         video {
-            width: 100%;
-            max-width: 640px;
-            height: auto;
-            border-radius: 15px;
-            border: 4px solid #d4af37;
-            box-shadow: 0 10px 25px rgba(212, 175, 55, 0.4);
+            width: 150px;
+            height: 150px;
+            border-radius: 50%;
+            border: 3px solid #d4af37;
+            box-shadow: 0 8px 20px rgba(212, 175, 55, 0.3);
+            position: absolute;
+            top: 20px;
+            right: 20px;
+            z-index: 20;
             object-fit: cover;
             transition: transform 0.3s ease, box-shadow 0.3s ease;
         }
         video:hover {
-            transform: scale(1.05);
-            box-shadow: 0 12px 30px rgba(212, 175, 55, 0.6);
+            transform: scale(1.1);
+            box-shadow: 0 12px 30px rgba(212, 175, 55, 0.5);
         }
         canvas {
+            border: 3px solid #a0aec0;
+            border-radius: 20px;
+            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.3);
             width: 100%;
-            max-width: 640px;
+            max-width: none;
             height: auto;
-            border: 4px solid #a0aec0;
-            border-radius: 15px;
-            box-shadow: 0 12px 30px rgba(0, 0, 0, 0.4);
             background: #2d3748;
+        }
+        .container {
+            max-width: 7xl;
+            margin: 0 auto;
+            padding: 2rem;
         }
         .premium-card {
             background: linear-gradient(135deg, #2d3748 0%, #4a5568 100%);
             border-radius: 15px;
             padding: 1.5rem;
-            border-left: 6px solid #d4af37;
-            box-shadow: 0 8px 20px rgba(0, 0, 0, 0.5);
+            border-left: 5px solid #d4af37;
+            box-shadow: 0 6px 15px rgba(0, 0, 0, 0.4);
             transition: transform 0.3s ease, box-shadow 0.3s ease;
         }
         .premium-card:hover {
             transform: translateY(-5px);
-            box-shadow: 0 12px 25px rgba(212, 175, 55, 0.5);
+            box-shadow: 0 10px 20px rgba(212, 175, 55, 0.4);
         }
         .status-incorrect {
-            color: #ff4d4d;
+            color: #ff6347;
             font-weight: 600;
             animation: pulse 1.5s infinite;
         }
@@ -105,15 +84,15 @@
         }
         button:hover {
             background: linear-gradient(90deg, #c0a062 0%, #d4af37 100%);
-            transform: translateY(-3px);
-            box-shadow: 0 6px 15px rgba(212, 175, 55, 0.5);
+            transform: translateY(-2px);
+            box-shadow: 0 4px 10px rgba(212, 175, 55, 0.5);
         }
         select {
             background: #2d3748;
             color: #e2e8f0;
             border: 2px solid #d4af37;
             border-radius: 10px;
-            padding: 0.5rem 1rem;
+            padding: 0.5rem;
             cursor: pointer;
             transition: all 0.3s ease;
         }
@@ -122,78 +101,70 @@
         }
         .personal-info {
             display: flex;
-            flex-direction: column;
             align-items: center;
             gap: 1rem;
+            margin-bottom: 1rem;
         }
         .personal-info img {
             width: 100px;
             height: 100px;
             border-radius: 50%;
-            border: 3px solid #d4af37;
+            border: 2px solid #d4af37;
             object-fit: cover;
-            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.3);
         }
         @keyframes pulse {
             0% { opacity: 1; }
             50% { opacity: 0.6; }
             100% { opacity: 1; }
         }
-        @media (max-width: 1024px) {
+        @media (max-width: 768px) {
             .container {
                 flex-direction: column;
+                align-items: center;
+                padding: 1rem;
             }
-            .left-panel, .right-panel {
+            canvas {
                 max-width: 100%;
             }
-            video, canvas {
-                max-width: 100%;
+            video {
+                top: 10px;
+                right: 10px;
+                width: 100px;
+                height: 100px;
             }
             h1 {
                 font-size: 2rem;
             }
         }
-        @media (max-width: 768px) {
-            .container {
-                padding: 0.5rem;
-            }
-            h1 {
-                font-size: 1.75rem;
-            }
-            .personal-info img {
-                width: 80px;
-                height: 80px;
-            }
-        }
     </style>
 </head>
-<body>
-    <h1 id="title">Advanced Postural Analysis System</h1>
-    <div class="container">
-        <div class="left-panel">
+<body class="min-h-screen flex flex-col items-center">
+    <h1 class="text-center mb-8" id="title">Postural Analysis System</h1>
+    <div class="container flex flex-col md:flex-row gap-8 w-full">
+        <div class="flex-1" style="width:100px">
             <div class="personal-info premium-card">
-                <img src="https://via.placeholder.com/100" alt="User's Photo">
-                <button id="personalButton">User Profile</button>
+                <img src="C:\Users\oussa\Desktop\Capture.JPG" alt="Kamal's Photo">
+                <button id="personalButton">Kamal</button>
                 <select id="languageSelect" onchange="changeLanguage()">
                     <option value="en">English</option>
                     <option value="fr">Français</option>
                     <option value="ar">العربية</option>
                 </select>
             </div>
-            <div id="analysis" class="premium-card">
-                <p class="text-lg font-semibold" id="postureStatusLabel">Postural Status: <span id="postureStatus">Waiting for analysis...</span></p>
-                <div id="postureDetails" class="hidden mt-4">
-                    <p class="text-lg font-semibold text-yellow-400" id="feedbackLabel">Posture Feedback:</p>
-                    <ul id="postureList" class="list-disc list-inside mt-2"></ul>
-                </div>
-            </div>
         </div>
-        <div class="right-panel">
-            <video id="video" autoplay></video>
-            <canvas id="canvas"></canvas>
+        <div id="analyseView" class="flex-1 relative">
+            <video id="video" autoplay class="mb-4"></video>
+            <canvas id="canvas" class="mb-4"></canvas>
             <div class="flex gap-4 flex-wrap justify-center">
                 <button id="startButton" onclick="startAnalysis()">Start Analysis</button>
                 <button id="switchButton" onclick="switchCamera()">Switch Camera</button>
+            </div>
+            <div id="analysis" class="p-6 mt-6">
+                <p class="text-lg" id="postureStatusLabel">Postural Status: <span id="postureStatus">Waiting for analysis...</span></p>
+                <div id="postureDetails" class="premium-card hidden mt-4">
+                    <p class="text-lg font-semibold text-yellow-400" id="feedbackLabel">Posture Feedback:</p>
+                    <ul id="postureList" class="list-disc list-inside mt-2"></ul>
+                </div>
             </div>
         </div>
     </div>
@@ -201,7 +172,7 @@
     <script>
         const translations = {
             en: {
-                title: "Advanced Postural Analysis System",
+                title: "Postural Analysis System",
                 startButton: "Start Analysis",
                 switchButton: "Switch Camera",
                 postureStatusLabel: "Postural Status: ",
@@ -213,44 +184,37 @@
                     head: "Head",
                     neck: "Neck",
                     shoulders: "Shoulders",
-                    arms: "Arms",
-                    forearms: "Forearms",
-                    wrists: "Wrists",
-                    hands: "Hands",
                     back: "Back",
-                    pelvis: "Pelvis",
+                    elbows: "Elbows",
+                    wrists: "Wrists",
                     thighs: "Thighs",
                     knees: "Knees",
                     feet: "Feet"
                 },
                 details: {
-                    headForward: "Head tilted forward beyond 20°",
-                    headMisaligned: "Head not aligned with torso",
-                    neckTilted: "Neck tilted or flexed excessively",
+                    headForward: "Head tilted forward",
+                    headBackward: "Head tilted backward",
+                    headRotated: "Head rotated",
+                    neckTilted: "Neck tilted",
                     neckTwisted: "Neck twisted",
-                    shouldersRaised: "Shoulders raised or tense",
-                    shouldersAbove: "Arms above shoulder line",
-                    armsExtended: "Arms excessively extended forward",
-                    armAngleIncorrect: "Arm-forearm angle not between 90-110°",
-                    forearmsNotHorizontal: "Forearms not horizontal or slightly inclined",
-                    forearmsSuspended: "Forearms suspended without support",
-                    wristsNotNeutral: "Wrists not aligned with forearms",
-                    wristsFlexed: "Wrists flexed excessively",
-                    handsTense: "Hands tense or fingers cramped",
-                    backForward: "Back tilted forward beyond 20°",
-                    backTwisted: "Back twisted",
-                    pelvisMisaligned: "Pelvis not aligned with torso",
-                    thighsNotHorizontal: "Thighs not horizontal when seated",
-                    thighsLocked: "Thighs locked when standing",
-                    kneesNot90: "Knees not at 90° when seated",
-                    kneesLocked: "Knees locked when standing",
-                    feetNotFlat: "Feet not flat on the ground",
-                    feetCrossed: "Feet crossed or on tiptoes",
+                    shouldersAsymmetric: "Asymmetric shoulders",
+                    shouldersContracted: "Contracted shoulders",
+                    backForward: "Back too bent forward",
+                    backBackward: "Back too bent backward",
+                    elbowLeft: "Left elbow mispositioned",
+                    elbowRight: "Right elbow mispositioned",
+                    wristLeft: "Left wrist bent",
+                    wristRight: "Right wrist bent",
+                    thighLeft: "Left thigh mispositioned",
+                    thighRight: "Right thigh mispositioned",
+                    kneeLeft: "Left knee mispositioned",
+                    kneeRight: "Right knee mispositioned",
+                    feetCrossed: "Legs crossed or suspended",
                     correct: "Correct position"
                 }
             },
             fr: {
-                title: "Système Avancé d'Analyse Posturale",
+                title: "Système d'Analyse Posturale",
                 startButton: "Démarrer l'Analyse",
                 switchButton: "Changer de Caméra",
                 postureStatusLabel: "État de la Posture : ",
@@ -262,44 +226,37 @@
                     head: "Tête",
                     neck: "Cou",
                     shoulders: "Épaules",
-                    arms: "Bras",
-                    forearms: "Avant-bras",
-                    wrists: "Poignets",
-                    hands: "Mains",
                     back: "Dos",
-                    pelvis: "Bassin",
+                    elbows: "Coudes",
+                    wrists: "Poignets",
                     thighs: "Cuisses",
                     knees: "Genoux",
                     feet: "Pieds"
                 },
                 details: {
-                    headForward: "Tête penchée vers l'avant au-delà de 20°",
-                    headMisaligned: "Tête non alignée avec le tronc",
-                    neckTilted: "Cou incliné ou fléchi excessivement",
+                    headForward: "Tête penchée vers l'avant",
+                    headBackward: "Tête penchée vers l'arrière",
+                    headRotated: "Tête tournée",
+                    neckTilted: "Cou incliné",
                     neckTwisted: "Cou tordu",
-                    shouldersRaised: "Épaules relevées ou tendues",
-                    shouldersAbove: "Bras au-dessus de la ligne des épaules",
-                    armsExtended: "Bras trop étendus vers l'avant",
-                    armAngleIncorrect: "Angle bras-avant-bras non compris entre 90-110°",
-                    forearmsNotHorizontal: "Avant-bras non horizontaux ou légèrement inclinés",
-                    forearmsSuspended: "Avant-bras suspendus sans support",
-                    wristsNotNeutral: "Poignets non alignés avec les avant-bras",
-                    wristsFlexed: "Poignets fléchis excessivement",
-                    handsTense: "Mains tendues ou doigts crispés",
-                    backForward: "Dos incliné vers l'avant au-delà de 20°",
-                    backTwisted: "Dos tordu",
-                    pelvisMisaligned: "Bassin non aligné avec le tronc",
-                    thighsNotHorizontal: "Cuisses non horizontales en position assise",
-                    thighsLocked: "Cuisses verrouillées en position debout",
-                    kneesNot90: "Genoux non à 90° en position assise",
-                    kneesLocked: "Genoux verrouillés en position debout",
-                    feetNotFlat: "Pieds non à plat sur le sol",
-                    feetCrossed: "Pieds croisés ou sur la pointe",
+                    shouldersAsymmetric: "Épaules asymétriques",
+                    shouldersContracted: "Épaules contractées",
+                    backForward: "Dos trop penché en avant",
+                    backBackward: "Dos trop penché en arrière",
+                    elbowLeft: "Coude gauche mal positionné",
+                    elbowRight: "Coude droit mal positionné",
+                    wristLeft: "Poignet gauche cassé",
+                    wristRight: "Poignet droit cassé",
+                    thighLeft: "Cuisse gauche mal positionnée",
+                    thighRight: "Cuisse droite mal positionnée",
+                    kneeLeft: "Genou gauche mal positionné",
+                    kneeRight: "Genou droit mal positionné",
+                    feetCrossed: "Jambes croisées ou suspendues",
                     correct: "Position correcte"
                 }
             },
             ar: {
-                title: "نظام تحليل الوضعية المتقدم",
+                title: "نظام تحليل الوضعية",
                 startButton: "بدء التحليل",
                 switchButton: "تبديل الكاميرا",
                 postureStatusLabel: "حالة الوضعية: ",
@@ -311,39 +268,32 @@
                     head: "الرأس",
                     neck: "الرقبة",
                     shoulders: "الأكتاف",
-                    arms: "الذراعان",
-                    forearms: "الساعدان",
-                    wrists: "المعصمان",
-                    hands: "اليدان",
                     back: "الظهر",
-                    pelvis: "الحوض",
+                    elbows: "الأكواع",
+                    wrists: "المعصمان",
                     thighs: "الفخذان",
                     knees: "الركبتان",
                     feet: "القدمان"
                 },
                 details: {
-                    headForward: "الرأس مائل للأمام أكثر من 20 درجة",
-                    headMisaligned: "الرأس غير محاذٍ للجذع",
-                    neckTilted: "الرقبة مائلة أو مثنية بشكل مفرط",
+                    headForward: "الرأس مائل للأمام",
+                    headBackward: "الرأس مائل للخلف",
+                    headRotated: "الرأس متجه جانبيًا",
+                    neckTilted: "الرقبة مائلة",
                     neckTwisted: "الرقبة ملتوية",
-                    shouldersRaised: "الأكتاف مرفوعة أو مشدودة",
-                    shouldersAbove: "الذراعان فوق خط الأكتاف",
-                    armsExtended: "الذراعان ممتدان للأمام بشكل مفرط",
-                    armAngleIncorrect: "زاوية الذراع-الساعد ليست بين 90-110 درجات",
-                    forearmsNotHorizontal: "الساعدان غير أفقيين أو مائلين قليلاً",
-                    forearmsSuspended: "الساعدان معلقان بدون دعم",
-                    wristsNotNeutral: "المعصمان غير محاذيين للساعدين",
-                    wristsFlexed: "المعصمان مثنيان بشكل مفرط",
-                    handsTense: "اليدان مشدودتان أو الأصابع متشنجة",
-                    backForward: "الظهر مائل للأمام أكثر من 20 درجة",
-                    backTwisted: "الظهر ملتوي",
-                    pelvisMisaligned: "الحوض غير محاذٍ للجذع",
-                    thighsNotHorizontal: "الفخذان غير أفقيين عند الجلوس",
-                    thighsLocked: "الفخذان مقفلان عند الوقوف",
-                    kneesNot90: "الركبتان ليستا بزاوية 90 درجة عند الجلوس",
-                    kneesLocked: "الركبتان مقفلتان عند الوقوف",
-                    feetNotFlat: "القدمان ليستا مسطحتين على الأرض",
-                    feetCrossed: "القدمان متقاطعتان أو على أطراف الأصابع",
+                    shouldersAsymmetric: "الأكتاف غير متماثلة",
+                    shouldersContracted: "الأكتاف منقبضة",
+                    backForward: "الظهر مائل للأمام كثيرًا",
+                    backBackward: "الظهر مائل للخلف كثيرًا",
+                    elbowLeft: "الكوع الأيسر في وضع غير صحيح",
+                    elbowRight: "الكوع الأيمن في وضع غير صحيح",
+                    wristLeft: "المعصم الأيسر مثني",
+                    wristRight: "المعصم الأيمن مثني",
+                    thighLeft: "الفخذ الأيسر في وضع غير صحيح",
+                    thighRight: "الفخذ الأيمن في وضع غير صحيح",
+                    kneeLeft: "الركبة اليسرى في وضع غير صحيح",
+                    kneeRight: "الركبة اليمنى في وضع غير صحيح",
+                    feetCrossed: "الساقان متقاطعتان أو معلقتان",
                     correct: "الوضعية صحيحة"
                 }
             }
@@ -367,24 +317,22 @@
         const postureStatus = document.getElementById('postureStatus');
         const postureDetails = document.getElementById('postureDetails');
         const postureList = document.getElementById('postureList');
+        const analyseView = document.getElementById('analyseView');
         let currentFacingMode = 'environment';
 
         const postureThresholds = {
-            head_inclination: 0.087, // ~20°
+            head_inclination: 0.08,
             head_rotation: 0.15,
             shoulder_height_diff: 0.04,
-            shoulder_arm_height: 0.05,
-            arm_extension: 0.2,
-            arm_angle_min: 90,
-            arm_angle_max: 110,
-            forearm_inclination: 10,
-            wrist_angle_max: 10,
-            back_angle_max: 20,
-            pelvis_misalignment: 0.1,
-            thigh_angle: 10,
-            knee_angle_min: 85,
-            knee_angle_max: 95,
-            feet_height_diff: 0.1
+            back_angle_min: 75,
+            back_angle_max: 105,
+            elbow_angle_min: 70,
+            elbow_angle_max: 110,
+            wrist_angle_max: 15,
+            knee_angle_min: 80,
+            knee_angle_max: 100,
+            thigh_angle_min: 75,
+            thigh_angle_max: 105
         };
 
         const pose = new Pose({
@@ -412,7 +360,7 @@
             camera.start();
             postureStatus.textContent = translations[currentLanguage].analyzing;
             postureDetails.classList.remove('hidden');
-            canvasElement.width = videoElement.clientWidth;
+            canvasElement.width = analyseView.clientWidth;
             canvasElement.height = canvasElement.width * (480 / 640);
         }
 
@@ -459,10 +407,7 @@
                 canvasCtx.fillStyle = '#d4af37';
                 canvasCtx.fill();
             }
-            const connections = [
-                [0, 7], [0, 8], [11, 12], [11, 13], [12, 14], [13, 15], [14, 16],
-                [11, 23], [12, 24], [23, 24], [23, 25], [24, 26], [25, 27], [26, 28]
-            ];
+            const connections = [[11, 12], [11, 13], [12, 14], [23, 24], [11, 23], [12, 24]];
             canvasCtx.strokeStyle = '#c0a062';
             canvasCtx.lineWidth = 10;
             for (const [start, end] of connections) {
@@ -479,15 +424,12 @@
                 head: { status: 'Correcte', details: translations[currentLanguage].details.correct },
                 neck: { status: 'Correcte', details: translations[currentLanguage].details.correct },
                 shoulders: { status: 'Correcte', details: translations[currentLanguage].details.correct },
-                arms: { status: 'Correcte', details: translations[currentLanguage].details.correct },
-                forearms: { status: 'Correcte', details: translations[currentLanguage].details.correct },
-                wrists: { status: 'Correcte', details: translations[currentLanguage].details.correct },
-                hands: { status: 'Correcte', details: translations[currentLanguage].details.correct },
                 back: { status: 'Correcte', details: translations[currentLanguage].details.correct, position: null },
-                pelvis: { status: 'Correcte', details: translations[currentLanguage].details.correct },
-                thighs: { status: 'Correcte', details: translations[currentLanguage].details.correct },
-                knees: { status: 'Correcte', details: translations[currentLanguage].details.correct },
-                feet: { status: 'Correcte', details: translations[currentLanguage].details.correct },
+                elbows: { left: null, right: null, status: 'Correcte', details: translations[currentLanguage].details.correct },
+                wrists: { left: null, right: null, status: 'Correcte', details: translations[currentLanguage].details.correct },
+                thighs: { left: null, right: null, status: 'Correcte', details: translations[currentLanguage].details.correct },
+                knees: { left: null, right: null, status: 'Correcte', details: translations[currentLanguage].details.correct },
+                feet: { left: null, right: null, status: 'Correcte', details: translations[currentLanguage].details.correct },
                 global_posture: 'Correcte',
                 details: ''
             };
@@ -508,133 +450,107 @@
             const leftAnkle = landmarks[27];
             const rightAnkle = landmarks[28];
 
-            // Head and Neck
             const earMidY = (leftEar.y + rightEar.y) / 2;
             const shoulderMidY = (leftShoulder.y + rightShoulder.y) / 2;
             const headInclination = earMidY - shoulderMidY;
             const headRotation = leftEar.x - rightEar.x;
-            const headTorsoAlignment = Math.abs(nose.x - (leftHip.x + rightHip.x) / 2);
+
             if (Math.abs(headInclination) > postureThresholds.head_inclination) {
                 analysis.head.status = 'Incorrecte';
-                analysis.head.details = translations[currentLanguage].details.headForward;
-            }
-            if (headTorsoAlignment > 0.1) {
-                analysis.head.status = 'Incorrecte';
-                analysis.head.details += analysis.head.details.includes('forward') || analysis.head.details.includes('للأمام') ? ` | ${translations[currentLanguage].details.headMisaligned}` : translations[currentLanguage].details.headMisaligned;
+                analysis.head.details = headInclination > 0 ? translations[currentLanguage].details.headForward : translations[currentLanguage].details.headBackward;
             }
             if (Math.abs(headRotation) > postureThresholds.head_rotation) {
-                analysis.neck.status = 'Incorrecte';
-                analysis.neck.details = translations[currentLanguage].details.neckTwisted;
+                analysis.head.status = 'Incorrecte';
+                analysis.head.details += analysis.head.details.includes('penchée') || analysis.head.details.includes('مائل') ? ` | ${translations[currentLanguage].details.headRotated}` : translations[currentLanguage].details.headRotated;
             }
+
             if (Math.abs(headInclination) > postureThresholds.head_inclination * 0.7) {
                 analysis.neck.status = 'Incorrecte';
-                analysis.neck.details += analysis.neck.details.includes('twisted') || analysis.neck.details.includes('ملتوية') ? ` | ${translations[currentLanguage].details.neckTilted}` : translations[currentLanguage].details.neckTilted;
+                analysis.neck.details = translations[currentLanguage].details.neckTilted;
+            }
+            if (Math.abs(headRotation) > postureThresholds.head_rotation * 0.7) {
+                analysis.neck.status = 'Incorrecte';
+                analysis.neck.details += analysis.neck.details.includes('incliné') || analysis.neck.details.includes('مائل') ? ` | ${translations[currentLanguage].details.neckTwisted}` : translations[currentLanguage].details.neckTwisted;
             }
 
-            // Shoulders
             const shoulderHeightDiff = Math.abs(leftShoulder.y - rightShoulder.y);
-            const shoulderAbove = Math.min(leftElbow.y, rightElbow.y) < Math.min(leftShoulder.y, rightShoulder.y) - postureThresholds.shoulder_arm_height;
-            if (shoulderHeightDiff > postureThresholds.shoulder_height_diff) {
-                analysis.shoulders.status = 'Incorrecte';
-                analysis.shoulders.details = translations[currentLanguage].details.shouldersRaised;
-            }
-            if (shoulderAbove) {
-                analysis.shoulders.status = 'Incorrecte';
-                analysis.shoulders.details += analysis.shoulders.details.includes('raised') || analysis.shoulders.details.includes('مرفوعة') ? ` | ${translations[currentLanguage].details.shouldersAbove}` : translations[currentLanguage].details.shouldersAbove;
-            }
-
-            // Arms
-            const armExtensionLeft = Math.abs(leftElbow.x - leftShoulder.x);
-            const armExtensionRight = Math.abs(rightElbow.x - rightShoulder.x);
-            const armAngleLeft = calculateAngle(leftShoulder, leftElbow, leftWrist);
-            const armAngleRight = calculateAngle(rightShoulder, rightElbow, rightWrist);
-            if (armExtensionLeft > postureThresholds.arm_extension || armExtensionRight > postureThresholds.arm_extension) {
-                analysis.arms.status = 'Incorrecte';
-                analysis.arms.details = translations[currentLanguage].details.armsExtended;
-            }
-            if (armAngleLeft < postureThresholds.arm_angle_min || armAngleLeft > postureThresholds.arm_angle_max ||
-                armAngleRight < postureThresholds.arm_angle_min || armAngleRight > postureThresholds.arm_angle_max) {
-                analysis.arms.status = 'Incorrecte';
-                analysis.arms.details += analysis.arms.details.includes('extended') || analysis.arms.details.includes('ممتدان') ? ` | ${translations[currentLanguage].details.armAngleIncorrect}` : translations[currentLanguage].details.armAngleIncorrect;
-            }
-
-            // Forearms
-            const forearmAngleLeft = calculateVerticalAngle(leftElbow, leftWrist);
-            const forearmAngleRight = calculateVerticalAngle(rightElbow, rightWrist);
-            if (Math.abs(forearmAngleLeft) > postureThresholds.forearm_inclination || Math.abs(forearmAngleRight) > postureThresholds.forearm_inclination) {
-                analysis.forearms.status = 'Incorrecte';
-                analysis.forearms.details = translations[currentLanguage].details.forearmsNotHorizontal;
-            }
-            if (Math.min(leftElbow.y, rightElbow.y) < Math.min(leftHip.y, rightHip.y) - 0.2) {
-                analysis.forearms.status = 'Incorrecte';
-                analysis.forearms.details += analysis.forearms.details.includes('horizontal') || analysis.forearms.details.includes('أفقيين') ? ` | ${translations[currentLanguage].details.forearmsSuspended}` : translations[currentLanguage].details.forearmsSuspended;
-            }
-
-            // Wrists
-            const wristAngleLeft = calculateWristAngle(leftElbow, leftWrist);
-            const wristAngleRight = calculateWristAngle(rightElbow, rightWrist);
-            if (Math.abs(wristAngleLeft) > postureThresholds.wrist_angle_max || Math.abs(wristAngleRight) > postureThresholds.wrist_angle_max) {
-                analysis.wrists.status = 'Incorrecte';
-                analysis.wrists.details = translations[currentLanguage].details.wristsNotNeutral;
-            }
-
-            // Hands
-            if (Math.abs(wristAngleLeft) > postureThresholds.wrist_angle_max * 1.5 || Math.abs(wristAngleRight) > postureThresholds.wrist_angle_max * 1.5) {
-                analysis.hands.status = 'Incorrecte';
-                analysis.hands.details = translations[currentLanguage].details.handsTense;
-            }
-
-            // Back
+            const shoulderHipAlignmentLeft = leftShoulder.x - leftHip.x;
+            const shoulderHipAlignmentRight = rightShoulder.x - rightHip.x;
             const shoulderMidX = (leftShoulder.x + rightShoulder.x) / 2;
             const hipMidX = (leftHip.x + rightHip.x) / 2;
             const hipMidY = (leftHip.y + rightHip.y) / 2;
             const backAngle = (180 / Math.PI) * Math.atan2(hipMidY - shoulderMidY, hipMidX - shoulderMidX);
             analysis.back.position = { shoulder_mid: [shoulderMidX, shoulderMidY], hip_mid: [hipMidX, hipMidY], angle: backAngle };
-            if (Math.abs(backAngle) > postureThresholds.back_angle_max) {
+
+            if (shoulderHeightDiff > postureThresholds.shoulder_height_diff) {
+                analysis.shoulders.status = 'Incorrecte';
+                analysis.shoulders.details = translations[currentLanguage].details.shouldersAsymmetric;
+            }
+            if (Math.abs(shoulderHipAlignmentLeft) > 0.1 || Math.abs(shoulderHipAlignmentRight) > 0.1) {
+                analysis.shoulders.status = 'Incorrecte';
+                analysis.shoulders.details += analysis.shoulders.details.includes('asymétriques') || analysis.shoulders.details.includes('غير متماثلة') ? ` | ${translations[currentLanguage].details.shouldersContracted}` : translations[currentLanguage].details.shouldersContracted;
+            }
+
+            if (backAngle < postureThresholds.back_angle_min) {
                 analysis.back.status = 'Incorrecte';
                 analysis.back.details = translations[currentLanguage].details.backForward;
-            }
-            if (Math.abs(shoulderMidX - hipMidX) > 0.1) {
+            } else if (backAngle > postureThresholds.back_angle_max) {
                 analysis.back.status = 'Incorrecte';
-                analysis.back.details += analysis.back.details.includes('forward') || analysis.back.details.includes('للأمام') ? ` | ${translations[currentLanguage].details.backTwisted}` : translations[currentLanguage].details.backTwisted;
+                analysis.back.details = translations[currentLanguage].details.backBackward;
             }
 
-            // Pelvis
-            const pelvisAlignment = Math.abs(leftHip.x - rightHip.x);
-            if (pelvisAlignment > postureThresholds.pelvis_misalignment) {
-                analysis.pelvis.status = 'Incorrecte';
-                analysis.pelvis.details = translations[currentLanguage].details.pelvisMisaligned;
+            analysis.elbows.left = calculateAngle(leftShoulder, leftElbow, leftWrist);
+            analysis.elbows.right = calculateAngle(rightShoulder, rightElbow, rightWrist);
+            analysis.wrists.left = calculateWristAngle(leftElbow, leftWrist);
+            analysis.wrists.right = calculateWristAngle(rightElbow, rightWrist);
+
+            if (analysis.elbows.left < postureThresholds.elbow_angle_min || analysis.elbows.left > postureThresholds.elbow_angle_max) {
+                analysis.elbows.status = 'Incorrecte';
+                analysis.elbows.details = translations[currentLanguage].details.elbowLeft;
+            }
+            if (analysis.elbows.right < postureThresholds.elbow_angle_min || analysis.elbows.right > postureThresholds.elbow_angle_max) {
+                analysis.elbows.status = 'Incorrecte';
+                analysis.elbows.details += analysis.elbows.details.includes('gauche') || analysis.elbows.details.includes('الأيسر') ? ` | ${translations[currentLanguage].details.elbowRight}` : translations[currentLanguage].details.elbowRight;
             }
 
-            // Thighs
-            const thighAngleLeft = calculateVerticalAngle(leftHip, leftKnee);
-            const thighAngleRight = calculateVerticalAngle(rightHip, rightKnee);
-            if (Math.abs(thighAngleLeft) > postureThresholds.thigh_angle || Math.abs(thighAngleRight) > postureThresholds.thigh_angle) {
+            if (Math.abs(analysis.wrists.left) > postureThresholds.wrist_angle_max) {
+                analysis.wrists.status = 'Incorrecte';
+                analysis.wrists.details = translations[currentLanguage].details.wristLeft;
+            }
+            if (Math.abs(analysis.wrists.right) > postureThresholds.wrist_angle_max) {
+                analysis.wrists.status = 'Incorrecte';
+                analysis.wrists.details += analysis.wrists.details.includes('gauche') || analysis.wrists.details.includes('الأيسر') ? ` | ${translations[currentLanguage].details.wristRight}` : translations[currentLanguage].details.wristRight;
+            }
+
+            analysis.thighs.left = calculateVerticalAngle(leftHip, leftKnee);
+            analysis.thighs.right = calculateVerticalAngle(rightHip, rightKnee);
+            analysis.knees.left = calculateAngle(leftHip, leftKnee, leftAnkle);
+            analysis.knees.right = calculateAngle(rightHip, rightKnee, rightAnkle);
+
+            if (analysis.thighs.left < postureThresholds.thigh_angle_min || analysis.thighs.left > postureThresholds.thigh_angle_max) {
                 analysis.thighs.status = 'Incorrecte';
-                analysis.thighs.details = translations[currentLanguage].details.thighsNotHorizontal;
+                analysis.thighs.details = translations[currentLanguage].details.thighLeft;
+            }
+            if (analysis.thighs.right < postureThresholds.thigh_angle_min || analysis.thighs.right > postureThresholds.thigh_angle_max) {
+                analysis.thighs.status = 'Incorrecte';
+                analysis.thighs.details += analysis.thighs.details.includes('gauche') || analysis.thighs.details.includes('الأيسر') ? ` | ${translations[currentLanguage].details.thighRight}` : translations[currentLanguage].details.thighRight;
             }
 
-            // Knees
-            const kneeAngleLeft = calculateAngle(leftHip, leftKnee, leftAnkle);
-            const kneeAngleRight = calculateAngle(rightHip, rightKnee, rightAnkle);
-            if (kneeAngleLeft < postureThresholds.knee_angle_min || kneeAngleLeft > postureThresholds.knee_angle_max ||
-                kneeAngleRight < postureThresholds.knee_angle_min || kneeAngleRight > postureThresholds.knee_angle_max) {
+            if (analysis.knees.left < postureThresholds.knee_angle_min || analysis.knees.left > postureThresholds.knee_angle_max) {
                 analysis.knees.status = 'Incorrecte';
-                analysis.knees.details = translations[currentLanguage].details.kneesNot90;
+                analysis.knees.details = translations[currentLanguage].details.kneeLeft;
+            }
+            if (analysis.knees.right < postureThresholds.knee_angle_min || analysis.knees.right > postureThresholds.knee_angle_max) {
+                analysis.knees.status = 'Incorrecte';
+                analysis.knees.details += analysis.knees.details.includes('gauche') || analysis.knees.details.includes('الأيسر') ? ` | ${translations[currentLanguage].details.kneeRight}` : translations[currentLanguage].details.kneeRight;
             }
 
-            // Feet
-            if (Math.abs(leftAnkle.y - rightAnkle.y) > postureThresholds.feet_height_diff) {
+            if (Math.abs(leftAnkle.y - rightAnkle.y) > 0.1) {
                 analysis.feet.status = 'Incorrecte';
                 analysis.feet.details = translations[currentLanguage].details.feetCrossed;
             }
-            if (Math.max(leftAnkle.y, rightAnkle.y) < Math.min(leftHip.y, rightHip.y) - 0.3) {
-                analysis.feet.status = 'Incorrecte';
-                analysis.feet.details += analysis.feet.details.includes('crossed') || analysis.feet.details.includes('متقاطعتان') ? ` | ${translations[currentLanguage].details.feetNotFlat}` : translations[currentLanguage].details.feetNotFlat;
-            }
 
-            // Global Posture
-            const components = ['head', 'neck', 'shoulders', 'arms', 'forearms', 'wrists', 'hands', 'back', 'pelvis', 'thighs', 'knees', 'feet'];
+            const components = ['head', 'neck', 'shoulders', 'back', 'elbows', 'wrists', 'thighs', 'knees', 'feet'];
             for (const comp of components) {
                 if (analysis[comp].status === 'Incorrecte') {
                     analysis.global_posture = 'Incorrecte';
@@ -668,19 +584,16 @@
 
         function displayAnalysis(analysis) {
             postureStatus.textContent = analysis.global_posture;
-            postureStatus.className = analysis.global_posture === 'Correcte' ? 'status-correct' : 'status-incorrect';
+            postureStatus.className = analysis.global_posture === 'Correcte' ? 'text-green-400 font-semibold' : 'text-red-400 font-semibold';
 
             postureList.innerHTML = '';
             const components = [
                 { key: 'head', label: translations[currentLanguage].components.head },
                 { key: 'neck', label: translations[currentLanguage].components.neck },
                 { key: 'shoulders', label: translations[currentLanguage].components.shoulders },
-                { key: 'arms', label: translations[currentLanguage].components.arms },
-                { key: 'forearms', label: translations[currentLanguage].components.forearms },
-                { key: 'wrists', label: translations[currentLanguage].components.wrists },
-                { key: 'hands', label: translations[currentLanguage].components.hands },
                 { key: 'back', label: translations[currentLanguage].components.back },
-                { key: 'pelvis', label: translations[currentLanguage].components.pelvis },
+                { key: 'elbows', label: translations[currentLanguage].components.elbows },
+                { key: 'wrists', label: translations[currentLanguage].components.wrists },
                 { key: 'thighs', label: translations[currentLanguage].components.thighs },
                 { key: 'knees', label: translations[currentLanguage].components.knees },
                 { key: 'feet', label: translations[currentLanguage].components.feet }
@@ -701,17 +614,17 @@
                 canvasCtx.beginPath();
                 canvasCtx.moveTo(shoulderMid[0] * canvasElement.width, shoulderMid[1] * canvasElement.height);
                 canvasCtx.lineTo(hipMid[0] * canvasElement.width, hipMid[1] * canvasElement.height);
-                canvasCtx.strokeStyle = analysis.back.status === 'Correcte' ? '#4ade80' : '#ff4d4d';
+                canvasCtx.strokeStyle = analysis.back.status === 'Correcte' ? '#c0a062' : '#ff6347';
                 canvasCtx.lineWidth = 10;
                 canvasCtx.stroke();
 
                 const backAngle = analysis.back.position.angle;
                 const midPoint = [
                     (shoulderMid[0] * canvasElement.width + hipMid[0] * canvasElement.width) / 2 + 50,
-                    (shoulderMid[1] * canvasElement.height + hipMid[1] *人们的canvasElement.height) / 2
+                    (shoulderMid[1] * canvasElement.height + hipMid[1] * canvasElement.height) / 2
                 ];
                 canvasCtx.fillStyle = '#d4af37';
-                canvasCtx.font = '18px Inter';
+                canvasCtx.font = '16px Arial';
                 canvasCtx.fillText(`Back Angle: ${Math.round(backAngle)}°`, midPoint[0], midPoint[1]);
             }
         }
