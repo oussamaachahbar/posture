@@ -84,6 +84,18 @@
             color: #4ade80;
             font-weight: 600;
         }
+        .severity-acceptable {
+            color: #4ade80;
+        }
+        .severity-faible {
+            color: #ffeb3b;
+        }
+        .severity-eleve {
+            color: #ff9800;
+        }
+        .severity-tresEleve {
+            color: #ff4d4d;
+        }
         button {
             background: linear-gradient(90deg, #d4af37 0%, #c0a062 100%);
             color: #1a202c;
@@ -258,6 +270,7 @@
                 modalTitle: "Risk Levels and Solutions",
                 postureStatusLabel: "Postural Status: ",
                 feedbackLabel: "Posture Feedback:",
+                severityLevel: "Severity Level",
                 waiting: "Waiting for analysis...",
                 analyzing: "Analyzing posture...",
                 noPerson: "No person detected",
@@ -389,6 +402,7 @@
                 modalTitle: "Niveaux de Risque et Solutions",
                 postureStatusLabel: "État de la Posture : ",
                 feedbackLabel: "Retour sur la Posture :",
+                severityLevel: "Niveau de Gravité",
                 waiting: "En attente d'analyse...",
                 analyzing: "Analyse de la posture...",
                 noPerson: "Aucune personne détectée",
@@ -520,6 +534,7 @@
                 modalTitle: "مستويات المخاطر والحلول",
                 postureStatusLabel: "حالة الوضعية: ",
                 feedbackLabel: "تعليقات الوضعية:",
+                severityLevel: "مستوى الخطورة",
                 waiting: "في انتظار التحليل...",
                 analyzing: "جارٍ تحليل الوضعية...",
                 noPerson: "لم يتم اكتشاف أي شخص",
@@ -587,7 +602,7 @@
                         eleve: "ضبط الأكتاف لتكون متساوية ومسترخية، تجنب رفعها أو توترها.",
                         tresEleve: "إرخاء الأكتاف وتسويتها بشكل عاجل، التفكير في العلاج الطبيعي إذا لزم الأمر."
                     },
-                   arms: {
+                    arms: {
                         acceptable: "الحفاظ على الذراعين بزاوية مريحة بين 90-110 درجات.",
                         faible: "ضبط وضعية الذراعين للحفاظ على زاوية 90-110 درجات مع الساعدين.",
                         eleve: "إعادة وضع الذراعين لتجنب التمدد أو الرفع الزائد.",
@@ -659,6 +674,37 @@
             document.getElementById('modalTitle').textContent = t.modalTitle;
         }
 
+        function getSeverityRanges(componentKey) {
+            const thresholds = {
+                head: { threshold: 0.087, maxDeviation: 0.2, unit: 'degrees', base: 20 },
+                neck: { threshold: 0.15, maxDeviation: 0.3, unit: 'degrees', base: 15 },
+                shoulders: { threshold: 0.04, maxDeviation: 0.1, unit: 'normalized' },
+                arms: { threshold: 0.2, maxDeviation: 0.4, unit: 'normalized' },
+                forearms: { threshold: 10, maxDeviation: 20, unit: 'degrees' },
+                wrists: { threshold: 10, maxDeviation: 20, unit: 'degrees' },
+                hands: { threshold: 15, maxDeviation: 30, unit: 'degrees' },
+                back: { threshold: 20, maxDeviation: 40, unit: 'degrees' },
+                pelvis: { threshold: 0.1, maxDeviation: 0.2, unit: 'normalized' },
+                thighs: { threshold: 10, maxDeviation: 20, unit: 'degrees' },
+                knees: { threshold: 10, maxDeviation: 20, unit: 'degrees' },
+                feet: { threshold: 0.1, maxDeviation: 0.2, unit: 'normalized' }
+            };
+
+            const t = thresholds[componentKey] || { threshold: 0.1, maxDeviation: 0.2, unit: 'normalized' };
+            const threshold = t.threshold;
+            const isDegrees = t.unit === 'degrees';
+            const base = t.base || threshold;
+
+            const ranges = {
+                acceptable: isDegrees ? `0° - ${(base * 0.5).toFixed(1)}°` : `0 - ${(threshold * 0.5).toFixed(3)}`,
+                faible: isDegrees ? `${(base * 0.5).toFixed(1)}° - ${(base * 1.0).toFixed(1)}°` : `${(threshold * 0.5).toFixed(3)} - ${(threshold * 1.0).toFixed(3)}`,
+                eleve: isDegrees ? `${(base * 1.0).toFixed(1)}° - ${(base * 2.0).toFixed(1)}°` : `${(threshold * 1.0).toFixed(3)} - ${(threshold * 2.0).toFixed(3)}`,
+                tresEleve: isDegrees ? `> ${(base * 2.0).toFixed(1)}°` : `> ${(threshold * 2.0).toFixed(3)}`
+            };
+
+            return ranges;
+        }
+
         function showRiskTables() {
             const modal = document.getElementById('riskModal');
             const riskTables = document.getElementById('riskTables');
@@ -681,29 +727,35 @@
             ];
 
             components.forEach(({ key, label }) => {
+                const ranges = getSeverityRanges(key);
                 const table = document.createElement('table');
                 table.innerHTML = `
                     <thead>
                         <tr>
                             <th>${label}</th>
-                            <th>${t.details.severity.acceptable.replace(' (', '').replace(')', '')}</th>
+                            <th>Niveau de Gravity</th>
+                            <th>Solution</th>
                         </tr>
                     </thead>
                     <tbody>
                         <tr>
                             <td>${t.details.severity.acceptable}</td>
+                            <td>${ranges.acceptable}</td>
                             <td>${t.solutions[key].acceptable}</td>
                         </tr>
                         <tr>
                             <td>${t.details.severity.faible}</td>
+                            <td>${ranges.faible}</td>
                             <td>${t.solutions[key].faible}</td>
                         </tr>
                         <tr>
                             <td>${t.details.severity.eleve}</td>
+                            <td>${ranges.eleve}</td>
                             <td>${t.solutions[key].eleve}</td>
                         </tr>
                         <tr>
                             <td>${t.details.severity.tresEleve}</td>
+                            <td>${ranges.tresEleve}</td>
                             <td>${t.solutions[key].tresEleve}</td>
                         </tr>
                     </tbody>
@@ -842,18 +894,18 @@
         function analyzePosture(landmarks) {
             const analysis = {
                 person_detected: true,
-                head: { status: 'Correcte', details: translations[currentLanguage].details.correct },
-                neck: { status: 'Correcte', details: translations[currentLanguage].details.correct },
-                shoulders: { status: 'Correcte', details: translations[currentLanguage].details.correct },
-                arms: { status: 'Correcte', details: translations[currentLanguage].details.correct },
-                forearms: { status: 'Correcte', details: translations[currentLanguage].details.correct },
-                wrists: { status: 'Correcte', details: translations[currentLanguage].details.correct },
-                hands: { status: 'Correcte', details: translations[currentLanguage].details.correct },
-                back: { status: 'Correcte', details: translations[currentLanguage].details.correct, position: null },
-                pelvis: { status: 'Correcte', details: translations[currentLanguage].details.correct },
-                thighs: { status: 'Correcte', details: translations[currentLanguage].details.correct },
-                knees: { status: 'Correcte', details: translations[currentLanguage].details.correct },
-                feet: { status: 'Correcte', details: translations[currentLanguage].details.correct },
+                head: { status: 'Correcte', details: translations[currentLanguage].details.correct, severity: 'acceptable' },
+                neck: { status: 'Correcte', details: translations[currentLanguage].details.correct, severity: 'acceptable' },
+                shoulders: { status: 'Correcte', details: translations[currentLanguage].details.correct, severity: 'acceptable' },
+                arms: { status: 'Correcte', details: translations[currentLanguage].details.correct, severity: 'acceptable' },
+                forearms: { status: 'Correcte', details: translations[currentLanguage].details.correct, severity: 'acceptable' },
+                wrists: { status: 'Correcte', details: translations[currentLanguage].details.correct, severity: 'acceptable' },
+                hands: { status: 'Correcte', details: translations[currentLanguage].details.correct, severity: 'acceptable' },
+                back: { status: 'Correcte', details: translations[currentLanguage].details.correct, severity: 'acceptable', position: null },
+                pelvis: { status: 'Correcte', details: translations[currentLanguage].details.correct, severity: 'acceptable' },
+                thighs: { status: 'Correcte', details: translations[currentLanguage].details.correct, severity: 'acceptable' },
+                knees: { status: 'Correcte', details: translations[currentLanguage].details.correct, severity: 'acceptable' },
+                feet: { status: 'Correcte', details: translations[currentLanguage].details.correct, severity: 'acceptable' },
                 global_posture: 'Correcte',
                 details: ''
             };
@@ -874,93 +926,123 @@
             const leftAnkle = landmarks[27];
             const rightAnkle = landmarks[28];
 
-            // Head and Neck
+            // Head
             const earMidY = (leftEar.y + rightEar.y) / 2;
             const shoulderMidY = (leftShoulder.y + rightShoulder.y) / 2;
             const headInclination = earMidY - shoulderMidY;
             const headRotation = leftEar.x - rightEar.x;
             const headTorsoAlignment = Math.abs(nose.x - (leftHip.x + rightHip.x) / 2);
+            let headSeverity = 'acceptable';
+            let headDetails = translations[currentLanguage].details.correct;
             if (Math.abs(headInclination) > postureThresholds.head_inclination) {
-                const severity = getSeverityLevel(Math.abs(headInclination), postureThresholds.head_inclination, 0.2);
-                analysis.head.status = 'Incorrecte';
-                analysis.head.details = `${translations[currentLanguage].details.headForward}${translations[currentLanguage].details.severity[severity]}`;
+                headSeverity = getSeverityLevel(Math.abs(headInclination), postureThresholds.head_inclination, 0.2);
+                headDetails = `${translations[currentLanguage].details.headForward}${translations[currentLanguage].details.severity[headSeverity]}`;
             }
             if (headTorsoAlignment > 0.1) {
                 const severity = getSeverityLevel(headTorsoAlignment, 0.1, 0.2);
-                analysis.head.status = 'Incorrecte';
-                analysis.head.details += analysis.head.details.includes('forward') || analysis.head.details.includes('للأمام') ? ` | ${translations[currentLanguage].details.headMisaligned}${translations[currentLanguage].details.severity[severity]}` : `${translations[currentLanguage].details.headMisaligned}${translations[currentLanguage].details.severity[severity]}`;
+                headSeverity = severity > headSeverity ? severity : headSeverity;
+                headDetails += headDetails.includes('forward') || headDetails.includes('للأمام') ? ` | ${translations[currentLanguage].details.headMisaligned}${translations[currentLanguage].details.severity[severity]}` : `${translations[currentLanguage].details.headMisaligned}${translations[currentLanguage].details.severity[severity]}`;
             }
+            analysis.head.status = headDetails === translations[currentLanguage].details.correct ? 'Correcte' : 'Incorrecte';
+            analysis.head.details = headDetails;
+            analysis.head.severity = headSeverity;
+
+            // Neck
+            let neckSeverity = 'acceptable';
+            let neckDetails = translations[currentLanguage].details.correct;
             if (Math.abs(headRotation) > postureThresholds.head_rotation) {
-                const severity = getSeverityLevel(Math.abs(headRotation), postureThresholds.head_rotation, 0.3);
-                analysis.neck.status = 'Incorrecte';
-                analysis.neck.details = `${translations[currentLanguage].details.neckTwisted}${translations[currentLanguage].details.severity[severity]}`;
+                neckSeverity = getSeverityLevel(Math.abs(headRotation), postureThresholds.head_rotation, 0.3);
+                neckDetails = `${translations[currentLanguage].details.neckTwisted}${translations[currentLanguage].details.severity[neckSeverity]}`;
             }
             if (Math.abs(headInclination) > postureThresholds.head_inclination * 0.7) {
                 const severity = getSeverityLevel(Math.abs(headInclination), postureThresholds.head_inclination * 0.7, 0.15);
-                analysis.neck.status = 'Incorrecte';
-                analysis.neck.details += analysis.neck.details.includes('twisted') || analysis.neck.details.includes('ملتوية') ? ` | ${translations[currentLanguage].details.neckTilted}${translations[currentLanguage].details.severity[severity]}` : `${translations[currentLanguage].details.neckTilted}${translations[currentLanguage].details.severity[severity]}`;
+                neckSeverity = severity > neckSeverity ? severity : neckSeverity;
+                neckDetails += neckDetails.includes('twisted') || neckDetails.includes('ملتوية') ? ` | ${translations[currentLanguage].details.neckTilted}${translations[currentLanguage].details.severity[severity]}` : `${translations[currentLanguage].details.neckTilted}${translations[currentLanguage].details.severity[severity]}`;
             }
+            analysis.neck.status = neckDetails === translations[currentLanguage].details.correct ? 'Correcte' : 'Incorrecte';
+            analysis.neck.details = neckDetails;
+            analysis.neck.severity = neckSeverity;
 
             // Shoulders
             const shoulderHeightDiff = Math.abs(leftShoulder.y - rightShoulder.y);
             const shoulderAbove = Math.min(leftElbow.y, rightElbow.y) < Math.min(leftShoulder.y, rightShoulder.y) - postureThresholds.shoulder_arm_height;
+            let shouldersSeverity = 'acceptable';
+            let shouldersDetails = translations[currentLanguage].details.correct;
             if (shoulderHeightDiff > postureThresholds.shoulder_height_diff) {
-                const severity = getSeverityLevel(shoulderHeightDiff, postureThresholds.shoulder_height_diff, 0.1);
-                analysis.shoulders.status = 'Incorrecte';
-                analysis.shoulders.details = `${translations[currentLanguage].details.shouldersRaised}${translations[currentLanguage].details.severity[severity]}`;
+                shouldersSeverity = getSeverityLevel(shoulderHeightDiff, postureThresholds.shoulder_height_diff, 0.1);
+                shouldersDetails = `${translations[currentLanguage].details.shouldersRaised}${translations[currentLanguage].details.severity[shouldersSeverity]}`;
             }
             if (shoulderAbove) {
                 const severity = getSeverityLevel(Math.min(leftElbow.y, rightElbow.y) - Math.min(leftShoulder.y, rightShoulder.y), postureThresholds.shoulder_arm_height, 0.1);
-                analysis.shoulders.status = 'Incorrecte';
-                analysis.shoulders.details += analysis.shoulders.details.includes('raised') || analysis.shoulders.details.includes('مرفوعة') ? ` | ${translations[currentLanguage].details.shouldersAbove}${translations[currentLanguage].details.severity[severity]}` : `${translations[currentLanguage].details.shouldersAbove}${translations[currentLanguage].details.severity[severity]}`;
+                shouldersSeverity = severity > shouldersSeverity ? severity : shouldersSeverity;
+                shouldersDetails += shouldersDetails.includes('raised') || shouldersDetails.includes('مرفوعة') ? ` | ${translations[currentLanguage].details.shouldersAbove}${translations[currentLanguage].details.severity[severity]}` : `${translations[currentLanguage].details.shouldersAbove}${translations[currentLanguage].details.severity[severity]}`;
             }
+            analysis.shoulders.status = shouldersDetails === translations[currentLanguage].details.correct ? 'Correcte' : 'Incorrecte';
+            analysis.shoulders.details = shouldersDetails;
+            analysis.shoulders.severity = shouldersSeverity;
 
             // Arms
             const armExtensionLeft = Math.abs(leftElbow.x - leftShoulder.x);
             const armExtensionRight = Math.abs(rightElbow.x - rightShoulder.x);
             const armAngleLeft = calculateAngle(leftShoulder, leftElbow, leftWrist);
             const armAngleRight = calculateAngle(rightShoulder, rightElbow, rightWrist);
+            let armsSeverity = 'acceptable';
+            let armsDetails = translations[currentLanguage].details.correct;
             if (armExtensionLeft > postureThresholds.arm_extension || armExtensionRight > postureThresholds.arm_extension) {
-                const severity = getSeverityLevel(Math.max(armExtensionLeft, armExtensionRight), postureThresholds.arm_extension, 0.4);
-                analysis.arms.status = 'Incorrecte';
-                analysis.arms.details = `${translations[currentLanguage].details.armsExtended}${translations[currentLanguage].details.severity[severity]}`;
+                armsSeverity = getSeverityLevel(Math.max(armExtensionLeft, armExtensionRight), postureThresholds.arm_extension, 0.4);
+                armsDetails = `${translations[currentLanguage].details.armsExtended}${translations[currentLanguage].details.severity[armsSeverity]}`;
             }
             if (armAngleLeft < postureThresholds.arm_angle_min || armAngleLeft > postureThresholds.arm_angle_max ||
                 armAngleRight < postureThresholds.arm_angle_min || armAngleRight > postureThresholds.arm_angle_max) {
                 const severity = getSeverityLevel(Math.min(armAngleLeft, armAngleRight) < postureThresholds.arm_angle_min ? postureThresholds.arm_angle_min - armAngleLeft : armAngleLeft - postureThresholds.arm_angle_max, 10, 20);
-                analysis.arms.status = 'Incorrecte';
-                analysis.arms.details += analysis.arms.details.includes('extended') || analysis.arms.details.includes('ممتدان') ? ` | ${translations[currentLanguage].details.armAngleIncorrect}${translations[currentLanguage].details.severity[severity]}` : `${translations[currentLanguage].details.armAngleIncorrect}${translations[currentLanguage].details.severity[severity]}`;
+                armsSeverity = severity > armsSeverity ? severity : armsSeverity;
+                armsDetails += armsDetails.includes('extended') || armsDetails.includes('ممتدان') ? ` | ${translations[currentLanguage].details.armAngleIncorrect}${translations[currentLanguage].details.severity[severity]}` : `${translations[currentLanguage].details.armAngleIncorrect}${translations[currentLanguage].details.severity[severity]}`;
             }
+            analysis.arms.status = armsDetails === translations[currentLanguage].details.correct ? 'Correcte' : 'Incorrecte';
+            analysis.arms.details = armsDetails;
+            analysis.arms.severity = armsSeverity;
 
             // Forearms
             const forearmAngleLeft = calculateVerticalAngle(leftElbow, leftWrist);
             const forearmAngleRight = calculateVerticalAngle(rightElbow, rightWrist);
+            let forearmsSeverity = 'acceptable';
+            let forearmsDetails = translations[currentLanguage].details.correct;
             if (Math.abs(forearmAngleLeft) > postureThresholds.forearm_inclination || Math.abs(forearmAngleRight) > postureThresholds.forearm_inclination) {
-                const severity = getSeverityLevel(Math.max(Math.abs(forearmAngleLeft), Math.abs(forearmAngleRight)), postureThresholds.forearm_inclination, 20);
-                analysis.forearms.status = 'Incorrecte';
-                analysis.forearms.details = `${translations[currentLanguage].details.forearmsNotHorizontal}${translations[currentLanguage].details.severity[severity]}`;
+                forearmsSeverity = getSeverityLevel(Math.max(Math.abs(forearmAngleLeft), Math.abs(forearmAngleRight)), postureThresholds.forearm_inclination, 20);
+                forearmsDetails = `${translations[currentLanguage].details.forearmsNotHorizontal}${translations[currentLanguage].details.severity[forearmsSeverity]}`;
             }
             if (Math.min(leftElbow.y, rightElbow.y) < Math.min(leftHip.y, rightHip.y) - 0.2) {
                 const severity = getSeverityLevel(Math.min(leftElbow.y, rightElbow.y) - Math.min(leftHip.y, rightHip.y), 0.2, 0.4);
-                analysis.forearms.status = 'Incorrecte';
-                analysis.forearms.details += analysis.forearms.details.includes('horizontal') || analysis.forearms.details.includes('أفقيين') ? ` | ${translations[currentLanguage].details.forearmsSuspended}${translations[currentLanguage].details.severity[severity]}` : `${translations[currentLanguage].details.forearmsSuspended}${translations[currentLanguage].details.severity[severity]}`;
+                forearmsSeverity = severity > forearmsSeverity ? severity : forearmsSeverity;
+                forearmsDetails += forearmsDetails.includes('horizontal') || forearmsDetails.includes('أفقيين') ? ` | ${translations[currentLanguage].details.forearmsSuspended}${translations[currentLanguage].details.severity[severity]}` : `${translations[currentLanguage].details.forearmsSuspended}${translations[currentLanguage].details.severity[severity]}`;
             }
+            analysis.forearms.status = forearmsDetails === translations[currentLanguage].details.correct ? 'Correcte' : 'Incorrecte';
+            analysis.forearms.details = forearmsDetails;
+            analysis.forearms.severity = forearmsSeverity;
 
             // Wrists
             const wristAngleLeft = calculateWristAngle(leftElbow, leftWrist);
             const wristAngleRight = calculateWristAngle(rightElbow, rightWrist);
+            let wristsSeverity = 'acceptable';
+            let wristsDetails = translations[currentLanguage].details.correct;
             if (Math.abs(wristAngleLeft) > postureThresholds.wrist_angle_max || Math.abs(wristAngleRight) > postureThresholds.wrist_angle_max) {
-                const severity = getSeverityLevel(Math.max(Math.abs(wristAngleLeft), Math.abs(wristAngleRight)), postureThresholds.wrist_angle_max, 20);
-                analysis.wrists.status = 'Incorrecte';
-                analysis.wrists.details = `${translations[currentLanguage].details.wristsNotNeutral}${translations[currentLanguage].details.severity[severity]}`;
+                wristsSeverity = getSeverityLevel(Math.max(Math.abs(wristAngleLeft), Math.abs(wristAngleRight)), postureThresholds.wrist_angle_max, 20);
+                wristsDetails = `${translations[currentLanguage].details.wristNotNeutral}${translations[currentLanguage].details.severity[wristSeverity]}`;
             }
+            analysis.wrists.status = wristsDetails === translations[currentLanguage].details.correct ? 'Correcte' : 'Incorrecte';
+            analysis.wrists.details = wristsDetails;
+            analysis.wrists.severity = wristsSeverity;
 
             // Hands
+            let handsSeverity = 'acceptable';
+            let handsDetails = translations[currentLanguage].details.correct;
             if (Math.abs(wristAngleLeft) > postureThresholds.wrist_angle_max * 1.5 || Math.abs(wristAngleRight) > postureThresholds.wrist_angle_max * 1.5) {
-                const severity = getSeverityLevel(Math.max(Math.abs(wristAngleLeft), Math.abs(wristAngleRight)), postureThresholds.wrist_angle_max * 1.5, 30);
-                analysis.hands.status = 'Incorrecte';
-                analysis.hands.details = `${translations[currentLanguage].details.handsTense}${translations[currentLanguage].details.severity[severity]}`;
+                handsSeverity = getSeverityLevel(Math.max(Math.abs(wristAngleLeft), Math.abs(wristAngleRight)), postureThresholds.wrist_angle_max * 1.5, 30);
+                handsDetails = `${translations[currentLanguage].details.handsTense}${translations[currentLanguage].details.severity[handsSeverity]}`;
             }
+            analysis.hands.status = handsDetails === translations[currentLanguage].details.correct ? 'Correcte' : 'Incorrecte';
+            analysis.hands.details = handsDetails;
+            analysis.hands.severity = handsSeverity;
 
             // Back
             const shoulderMidX = (leftShoulder.x + rightShoulder.x) / 2;
@@ -968,55 +1050,74 @@
             const hipMidY = (leftHip.y + rightHip.y) / 2;
             const backAngle = (180 / Math.PI) * Math.atan2(hipMidY - shoulderMidY, hipMidX - shoulderMidX);
             analysis.back.position = { shoulder_mid: [shoulderMidX, shoulderMidY], hip_mid: [hipMidX, hipMidY], angle: backAngle };
+            let backSeverity = 'acceptable';
+            let backDetails = translations[currentLanguage].details.correct;
             if (Math.abs(backAngle) > postureThresholds.back_angle_max) {
-                const severity = getSeverityLevel(Math.abs(backAngle), postureThresholds.back_angle_max, 40);
-                analysis.back.status = 'Incorrecte';
-                analysis.back.details = `${translations[currentLanguage].details.backForward}${translations[currentLanguage].details.severity[severity]}`;
+                backSeverity = getSeverityLevel(Math.abs(backAngle), postureThresholds.back_angle_max, 40);
+                backDetails = `${translations[currentLanguage].details.backForward}${translations[currentLanguage].details.severity[backSeverity]}`;
             }
             if (Math.abs(shoulderMidX - hipMidX) > 0.1) {
                 const severity = getSeverityLevel(Math.abs(shoulderMidX - hipMidX), postureThresholds.pelvis_misalignment, 0.2);
-                analysis.back.status = 'Incorrecte';
-                analysis.back.details += analysis.back.details.includes('forward') || analysis.back.details.includes('للأمام') ? ` | ${translations[currentLanguage].details.backTwisted}${translations[currentLanguage].details.severity[severity]}` : `${translations[currentLanguage].details.backTwisted}${translations[currentLanguage].details.severity[severity]}`;
+                backSeverity = severity > backSeverity ? severity : backSeverity;
+                backDetails += backDetails.includes('forward') || backDetails.includes('للأمام') ? ` | ${translations[currentLanguage].details.backTwisted}${translations[currentLanguage].details.severity[severity]}` : `${translations[currentLanguage].details.backTwisted}${translations[currentLanguage].details.severity[severity]}}`;
             }
+            analysis.back.status = backDetails === translations[currentLanguage].details.correct ? 'Correcte' : 'Incorrecte';
+            analysis.back.details = backDetails;
+            analysis.back.severity = backSeverity;
 
             // Pelvis
             const pelvisAlignment = Math.abs(leftHip.x - rightHip.x);
+            let pelvisSeverity = 'acceptable';
+            let pelvisDetails = translations[currentLanguage].details.correct;
             if (pelvisAlignment > postureThresholds.pelvis_misalignment) {
-                const severity = getSeverityLevel(pelvisAlignment, postureThresholds.pelvis_misalignment, 0.2);
-                analysis.pelvis.status = 'Incorrecte';
-                analysis.pelvis.details = `${translations[currentLanguage].details.pelvisMisaligned}${translations[currentLanguage].details.severity[severity]}`;
+                pelvisSeverity = getSeverityLevel(pelvisAlignment, postureThresholds.pelvis_misalignment, 0.2);
+                pelvisDetails = `${translations[currentLanguage].details.pelvisMisaligned}${translations[currentLanguage].details.severity[pelvisSeverity]}`;
             }
+            analysis.pelvis.status = pelvisDetails === translations[currentLanguage].details.correct ? 'Correcte' : 'Incorrecte';
+            analysis.pelvis.details = pelvisDetails;
+            analysis.pelvis.severity = pelvisSeverity;
 
             // Thighs
             const thighAngleLeft = calculateVerticalAngle(leftHip, leftKnee);
             const thighAngleRight = calculateVerticalAngle(rightHip, rightKnee);
+            let thighsSeverity = 'acceptable';
+            let thighsDetails = translations[currentLanguage].details.correct;
             if (Math.abs(thighAngleLeft) > postureThresholds.thigh_angle || Math.abs(thighAngleRight) > postureThresholds.thigh_angle) {
-                const severity = getSeverityLevel(Math.max(Math.abs(thighAngleLeft), Math.abs(thighAngleRight)), postureThresholds.thigh_angle, 20);
-                analysis.thighs.status = 'Incorrecte';
-                analysis.thighs.details = `${translations[currentLanguage].details.thighsNotHorizontal}${translations[currentLanguage].details.severity[severity]}`;
+                thighsSeverity = getSeverityLevel(Math.max(Math.abs(thighAngleLeft), Math.abs(thighAngleRight)), postureThresholds.thigh_angle, 20);
+                thighsDetails = `${translations[currentLanguage].details.thighsNotHorizontal}${translations[currentLanguage].details.severity[thighsSeverity]}`;
             }
+            analysis.thighs.status = thighsDetails === translations[currentLanguage].details.correct ? 'Correcte' : 'Incorrecte';
+            analysis.thighs.details = thighsDetails;
+            analysis.thighs.severity = thighsSeverity;
 
             // Knees
             const kneeAngleLeft = calculateAngle(leftHip, leftKnee, leftAnkle);
             const kneeAngleRight = calculateAngle(rightHip, rightKnee, rightAnkle);
-            if (kneeAngleLeft < postureThresholds.knee_angle_min || kneeAngleLeft > postureThresholds.knee_angle_max ||
-                kneeAngleRight < postureThresholds.knee_angle_min || kneeAngleRight > postureThresholds.knee_angle_max) {
-                const severity = getSeverityLevel(Math.min(kneeAngleLeft, kneeAngleRight) < postureThresholds.knee_angle_min ? postureThresholds.knee_angle_min - kneeAngleLeft : kneeAngleLeft - postureThresholds.knee_angle_max, 10, 20);
-                analysis.knees.status = 'Incorrecte';
-                analysis.knees.details = `${translations[currentLanguage].details.kneesNot90}${translations[currentLanguage].details.severity[severity]}`;
+            let kneesSeverity = 'acceptable';
+            let kneesDetails = translations[currentLanguage].details.correct;
+            if (kneeAngleLeft < postureThresholds.knee_angle_min || keneeAngleLeft > postureThresholds.knee_angle_max || keneeAngleRight < postureThresholds.knee_angle_min || keneeAngleRight > postureThresholds.knee_angle_max) {
+                kneesSeverity = getSeverityLevel(Math.min(kneeAngleLeft, kneeAngleRight) < postureThresholds.knee_angle_min ? postureThresholds.knee_angle_min - kneeAngleLeft : kneeAngleLeft - postureThresholds.knee_angle_max, 10, 20);
+                kneesDetails = `${translations[currentLanguage].details.kneesNot90}${translations[currentLanguage].details.severity[kneesSeverity]}`;
             }
+            analysis.knees.status = kneesDetails === translations[currentLanguage].details.correct ? 'Correcte' : 'Incorrecte';
+            analysis.knees.details = kneesDetails;
+            analysis.knees.severity = kneesSeverity;
 
             // Feet
+            let feetSeverity = 'acceptable';
+            let feetDetails = translations[currentLanguage].details.correct;
             if (Math.abs(leftAnkle.y - rightAnkle.y) > postureThresholds.feet_height_diff) {
-                const severity = getSeverityLevel(Math.abs(leftAnkle.y - rightAnkle.y), postureThresholds.feet_height_diff, 0.2);
-                analysis.feet.status = 'Incorrecte';
-                analysis.feet.details = `${translations[currentLanguage].details.feetCrossed}${translations[currentLanguage].details.severity[severity]}`;
+                feetSeverity = getSeverityLevel(Math.abs(leftAnkle.y - rightAnkle.y), postureThresholds.feet_height_diff, 0.2);
+                feetDetails = `${translations[currentLanguage].details.feetCrossed}${translations[currentLanguage].details.severity[feetSeverity]}`;
             }
             if (Math.max(leftAnkle.y, rightAnkle.y) < Math.min(leftHip.y, rightHip.y) - 0.3) {
                 const severity = getSeverityLevel(Math.max(leftAnkle.y, rightAnkle.y) - Math.min(leftHip.y, rightHip.y), 0.3, 0.5);
-                analysis.feet.status = 'Incorrecte';
-                analysis.feet.details += analysis.feet.details.includes('crossed') || analysis.feet.details.includes('متقاطعتان') ? ` | ${translations[currentLanguage].details.feetNotFlat}${translations[currentLanguage].details.severity[severity]}` : `${translations[currentLanguage].details.feetNotFlat}${translations[currentLanguage].details.severity[severity]}`;
+                feetSeverity = severity > feetSeverity ? severity : feetSeverity;
+                feetDetails += feetDetails.includes('crossed') || feetDetails.includes('متقاطعتان') ? ` | ${translations[currentLanguage].details.feetNotFlat}${translations[currentLanguage].details.severity[severity]}` : `${translations[currentLanguage].details.feetNotFlat}${translations[currentLanguage].details.severity[severity]}`;
             }
+            analysis.feet.status = feetDetails === translations[currentLanguage].details.correct ? 'Correcte' : 'Incorrecte';
+            analysis.feet.details = feetDetails;
+            analysis.feet.severity = feetSeverity;
 
             // Global Posture
             const components = ['head', 'neck', 'shoulders', 'arms', 'forearms', 'wrists', 'hands', 'back', 'pelvis', 'thighs', 'knees', 'feet'];
@@ -1033,21 +1134,21 @@
         function calculateAngle(a, b, c) {
             const ba = [a.x - b.x, a.y - b.y];
             const bc = [c.x - b.x, c.y - b.y];
-            const cosineAngle = (ba[0] * bc[0] + ba[1] * bc[1]) / (Math.sqrt(ba[0]**2 + ba[1]**2) * Math.sqrt(bc[0]**2 + bc[1]**2));
+            const cosineAngle = (ba[0] * bc[0] + ba[1] * ba[1]) / (Math.sqrt(ba[0]**2 + ba[1]**2) * Math.sqrt(bc[0]**2 + bc[1]**2));
             return (180 / Math.PI) * Math.acos(Math.min(Math.max(cosineAngle, -1), 1));
         }
 
         function calculateVerticalAngle(a, b) {
             const vertical = [0, -1];
             const ab = [b.x - a.x, b.y - a.y];
-            const cosineAngle = (vertical[0] * ab[0] + vertical[1] * ab[1]) / (Math.sqrt(ab[0]**2 + ab[1]**2));
+            const cosineAngle = (vertical[0] * ab[0] + vertical[1] * ab[1]) / Math.sqrt(ab[0]**2 + ab[1]**2);
             return (180 / Math.PI) * Math.acos(Math.min(Math.max(cosineAngle, -1), 1));
         }
 
         function calculateWristAngle(elbow, wrist) {
             const forearmVector = [wrist.x - elbow.x, wrist.y - elbow.y];
             const vertical = [0, 1];
-            const cosineAngle = (forearmVector[0] * vertical[0] + forearmVector[1] * vertical[1]) / (Math.sqrt(forearmVector[0]**2 + forearmVector[1]**2));
+            const cosineAngle = (forearmVector[0] * vertical[0] + forearmVector[1] * vertical[1]) / Math.sqrt(forearmVector[0]**2 + forearmVector[1]**2);
             return (180 / Math.PI) * Math.acos(Math.min(Math.max(cosineAngle, -1), 1));
         }
 
@@ -1073,7 +1174,8 @@
 
             for (const { key, label } of components) {
                 const li = document.createElement('li');
-                li.textContent = `${label}: ${analysis[key].details}`;
+                const severityText = translations[currentLanguage].details.severity[analysis[key].severity];
+                li.innerHTML = `${label}: ${analysis[key].details} <span class="severity-${analysis[key].severity}">[${severityText}]</span>`;
                 li.className = analysis[key].status === 'Correcte' ? 'status-correct' : 'status-incorrect';
                 postureList.appendChild(li);
             }
