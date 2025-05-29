@@ -125,6 +125,56 @@
             object-fit: cover;
             box-shadow: 0 4px 10px rgba(0, 0, 0, 0.3);
         }
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.8);
+            z-index: 100;
+            overflow-y: auto;
+            padding: 2rem;
+        }
+        .modal-content {
+            background: linear-gradient(135deg, #2d3748 0%, #4a5568 100%);
+            max-width: 800px;
+            margin: 2rem auto;
+            padding: 2rem;
+            border-radius: 15px;
+            border: 4px solid #d4af37;
+            box-shadow: 0 12px 30px rgba(0, 0, 0, 0.5);
+        }
+        .modal-content h2 {
+            color: #ffd700;
+            font-size: 1.75rem;
+            margin-bottom: 1rem;
+        }
+        .modal-content table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-bottom: 1.5rem;
+        }
+        .modal-content th, .modal-content td {
+            padding: 0.75rem;
+            border: 2px solid #d4af37;
+            text-align: left;
+            color: #e2e8f0;
+        }
+        .modal-content th {
+            background: #4a5568;
+            font-weight: 600;
+        }
+        .modal-content .close-button {
+            background: #ff4d4d;
+            color: #fff;
+            margin-top: 1rem;
+        }
+        .modal-content .close-button:hover {
+            background: #e53e3e;
+            transform: translateY(-3px);
+        }
         @keyframes pulse {
             0% { opacity: 1; }
             50% { opacity: 0.6; }
@@ -154,6 +204,10 @@
                 width: 100px;
                 height: 100px;
             }
+            .modal-content {
+                margin: 1rem;
+                padding: 1rem;
+            }
         }
     </style>
 </head>
@@ -161,7 +215,8 @@
     <h1 id="title">Advanced Postural Analysis System</h1>
     <div class="container">
         <div class="personal-info premium-card">
-<img src="https://raw.githubusercontent.com/oussamaachahbar/posture/main/Capture.JPG" alt="User's Photo">            <button id="personalButton">KAMAL MOUJOUD</button>
+            <img src="https://raw.githubusercontent.com/oussamaachahbar/posture/main/Capture.JPG" alt="User's Photo">
+            <button id="personalButton">KAMAL MOUJOUD</button>
             <select id="languageSelect" onchange="changeLanguage()">
                 <option value="en">English</option>
                 <option value="fr">Français</option>
@@ -174,6 +229,7 @@
             <div class="flex gap-4 flex-wrap justify-center mt-6">
                 <button id="startButton" onclick="startAnalysis()">Start Analysis</button>
                 <button id="switchButton" onclick="switchCamera()">Switch Camera</button>
+                <button id="tableButton" onclick="showRiskTables()">Table</button>
             </div>
             <div id="analysis" class="premium-card mt-6">
                 <p class="text-lg font-semibold" id="postureStatusLabel">Postural Status: <span id="postureStatus">Waiting for analysis...</span></p>
@@ -184,6 +240,13 @@
             </div>
         </div>
     </div>
+    <div id="riskModal" class="modal">
+        <div class="modal-content">
+            <h2 id="modalTitle">Risk Levels and Solutions</h2>
+            <div id="riskTables"></div>
+            <button class="close-button" onclick="closeRiskModal()">Close</button>
+        </div>
+    </div>
 
     <script>
         const translations = {
@@ -191,6 +254,8 @@
                 title: "Advanced Postural Analysis System",
                 startButton: "Start Analysis",
                 switchButton: "Switch Camera",
+                tableButton: "Table",
+                modalTitle: "Risk Levels and Solutions",
                 postureStatusLabel: "Postural Status: ",
                 feedbackLabel: "Posture Feedback:",
                 waiting: "Waiting for analysis...",
@@ -240,12 +305,88 @@
                         eleve: " (High)",
                         tresEleve: " (Very High)"
                     }
+                },
+                solutions: {
+                    head: {
+                        acceptable: "Maintain current head position, keeping it aligned with the spine.",
+                        faible: "Adjust head slightly to align with the spine and avoid forward tilt.",
+                        eleve: "Reposition head to be directly above shoulders, avoid leaning forward.",
+                        tresEleve: "Urgently correct head position, consult a posture specialist if persistent."
+                    },
+                    neck: {
+                        acceptable: "Keep neck relaxed and aligned with the spine.",
+                        faible: "Gently straighten neck to reduce tilt or twist.",
+                        eleve: "Correct neck alignment by keeping it in line with the spine, avoid twisting.",
+                        tresEleve: "Immediately adjust neck position, consider ergonomic support or professional advice."
+                    },
+                    shoulders: {
+                        acceptable: "Maintain relaxed shoulders at an even height.",
+                        faible: "Lower shoulders slightly and keep them relaxed.",
+                        eleve: "Adjust shoulders to be level and relaxed, avoid raising or tensing.",
+                        tresEleve: "Urgently relax and level shoulders, consider physical therapy if needed."
+                    },
+                    arms: {
+                        acceptable: "Keep arms at a comfortable 90-110° angle.",
+                        faible: "Adjust arm position to maintain a 90-110° angle with forearms.",
+                        eleve: "Reposition arms to avoid excessive extension or elevation.",
+                        tresEleve: "Correct arm positioning immediately, use armrests for support."
+                    },
+                    forearms: {
+                        acceptable: "Maintain forearms horizontal or slightly inclined with support.",
+                        faible: "Slightly adjust forearms to be horizontal and supported.",
+                        eleve: "Reposition forearms to rest on a surface, avoid suspension.",
+                        tresEleve: "Urgently adjust forearms to a supported, horizontal position."
+                    },
+                    wrists: {
+                        acceptable: "Keep wrists neutral and aligned with forearms.",
+                        faible: "Adjust wrists to maintain a neutral position.",
+                        eleve: "Correct wrist alignment to avoid excessive flexion.",
+                        tresEleve: "Immediately reposition wrists to neutral, consider wrist supports."
+                    },
+                    hands: {
+                        acceptable: "Keep hands relaxed with fingers at ease.",
+                        faible: "Relax hands to reduce tension in fingers.",
+                        eleve: "Adjust hand position to avoid cramping or tension.",
+                        tresEleve: "Urgently relax hands, consider ergonomic tools or consultation."
+                    },
+                    back: {
+                        acceptable: "Maintain a straight back aligned with the pelvis.",
+                        faible: "Straighten back slightly to align with the pelvis.",
+                        eleve: "Correct back posture to avoid forward tilt or twisting.",
+                        tresEleve: "Immediately straighten back, consider lumbar support or professional help."
+                    },
+                    pelvis: {
+                        acceptable: "Keep pelvis aligned with the torso.",
+                        faible: "Adjust pelvis slightly to align with the torso.",
+                        eleve: "Reposition pelvis to maintain alignment with the spine.",
+                        tresEleve: "Urgently correct pelvis alignment, consider ergonomic seating."
+                    },
+                    thighs: {
+                        acceptable: "Maintain thighs horizontal when seated.",
+                        faible: "Adjust thighs to be more horizontal when seated.",
+                        eleve: "Reposition thighs to ensure they are horizontal and supported.",
+                        tresEleve: "Immediately adjust thigh position, use proper seating support."
+                    },
+                    knees: {
+                        acceptable: "Keep knees at a 90° angle when seated.",
+                        faible: "Adjust knees slightly to maintain a 90° angle.",
+                        eleve: "Reposition knees to achieve a 90° angle when seated.",
+                        tresEleve: "Urgently correct knee angle, ensure proper seat height."
+                    },
+                    feet: {
+                        acceptable: "Keep feet flat on the ground, not crossed.",
+                        faible: "Adjust feet to be flat on the ground, avoid crossing.",
+                        eleve: "Reposition feet to ensure they are flat and uncrossed.",
+                        tresEleve: "Immediately place feet flat on the ground, use a footrest if needed."
+                    }
                 }
             },
             fr: {
                 title: "Système Avancé d'Analyse Posturale",
                 startButton: "Démarrer l'Analyse",
                 switchButton: "Changer de Caméra",
+                tableButton: "Tableau",
+                modalTitle: "Niveaux de Risque et Solutions",
                 postureStatusLabel: "État de la Posture : ",
                 feedbackLabel: "Retour sur la Posture :",
                 waiting: "En attente d'analyse...",
@@ -295,12 +436,88 @@
                         eleve: " (Élevé)",
                         tresEleve: " (Très Élevé)"
                     }
+                },
+                solutions: {
+                    head: {
+                        acceptable: "Maintenir la position actuelle de la tête, alignée avec la colonne vertébrale.",
+                        faible: "Ajuster légèrement la tête pour l'aligner avec la colonne et éviter l'inclinaison vers l'avant.",
+                        eleve: "Repositionner la tête directement au-dessus des épaules, éviter de pencher en avant.",
+                        tresEleve: "Corriger immédiatement la position de la tête, consulter un spécialiste de la posture si persistant."
+                    },
+                    neck: {
+                        acceptable: "Garder le cou détendu et aligné avec la colonne vertébrale.",
+                        faible: "Redresser doucement le cou pour réduire l'inclinaison ou la torsion.",
+                        eleve: "Corriger l'alignement du cou en le maintenant en ligne avec la colonne, éviter la torsion.",
+                        tresEleve: "Ajuster immédiatement la position du cou, envisager un soutien ergonomique ou des conseils professionnels."
+                    },
+                    shoulders: {
+                        acceptable: "Maintenir les épaules détendues à une hauteur égale.",
+                        faible: "Abaisser légèrement les épaules et les garder détendues.",
+                        eleve: "Ajuster les épaules pour qu'elles soient de niveau et détendues, éviter de les relever ou de les tendre.",
+                        tresEleve: "Détendre et niveler les épaules de toute urgence, envisager une thérapie physique si nécessaire."
+                    },
+                    arms: {
+                        acceptable: "Maintenir les bras à un angle confortable de 90-110°.",
+                        faible: "Ajuster la position des bras pour maintenir un angle de 90-110° avec les avant-bras.",
+                        eleve: "Repositionner les bras pour éviter une extension ou une élévation excessive.",
+                        tresEleve: "Corriger immédiatement la position des bras, utiliser des accoudoirs pour le soutien."
+                    },
+                    forearms: {
+                        acceptable: "Maintenir les avant-bras horizontaux ou légèrement inclinés avec un soutien.",
+                        faible: "Ajuster légèrement les avant-bras pour qu'ils soient horizontaux et soutenus.",
+                        eleve: "Repositionner les avant-bras pour qu'ils reposent sur une surface, éviter la suspension.",
+                        tresEleve: "Ajuster de toute urgence les avant-bras à une position horizontale soutenue."
+                    },
+                    wrists: {
+                        acceptable: "Maintenir les poignets neutres et alignés avec les avant-bras.",
+                        faible: "Ajuster les poignets pour maintenir une position neutre.",
+                        eleve: "Corriger l'alignement des poignets pour éviter une flexion excessive.",
+                        tresEleve: "Repositionner immédiatement les poignets à une position neutre, envisager des supports pour poignets."
+                    },
+                    hands: {
+                        acceptable: "Garder les mains détendues avec les doigts à l'aise.",
+                        faible: "Détendre les mains pour réduire la tension dans les doigts.",
+                        eleve: "Ajuster la position des mains pour éviter les crampes ou la tension.",
+                        tresEleve: "Détendre immédiatement les mains, envisager des outils ergonomiques ou une consultation."
+                    },
+                    back: {
+                        acceptable: "Maintenir un dos droit aligné avec le bassin.",
+                        faible: "Redresser légèrement le dos pour l'aligner avec le bassin.",
+                        eleve: "Corriger la posture du dos pour éviter l'inclinaison vers l'avant ou la torsion.",
+                        tresEleve: "Redresser immédiatement le dos, envisager un soutien lombaire ou une aide professionnelle."
+                    },
+                    pelvis: {
+                        acceptable: "Maintenir le bassin aligné avec le tronc.",
+                        faible: "Ajuster légèrement le bassin pour l'aligner avec le tronc.",
+                        eleve: "Repositionner le bassin pour maintenir l'alignement avec la colonne vertébrale.",
+                        tresEleve: "Corriger de toute urgence l'alignement du bassin, envisager un siège ergonomique."
+                    },
+                    thighs: {
+                        acceptable: "Maintenir les cuisses horizontales en position assise.",
+                        faible: "Ajuster les cuisses pour qu'elles soient plus horizontales en position assise.",
+                        eleve: "Repositionner les cuisses pour s'assurer qu'elles sont horizontales et soutenues.",
+                        tresEleve: "Ajuster immédiatement la position des cuisses, utiliser un soutien d'assise approprié."
+                    },
+                    knees: {
+                        acceptable: "Maintenir les genoux à un angle de 90° en position assise.",
+                        faible: "Ajuster légèrement les genoux pour maintenir un angle de 90°.",
+                        eleve: "Repositionner les genoux pour atteindre un angle de 90° en position assise.",
+                        tresEleve: "Corriger de toute urgence l'angle des genoux, s'assurer de la bonne hauteur de siège."
+                    },
+                    feet: {
+                        acceptable: "Maintenir les pieds à plat sur le sol, non croisés.",
+                        faible: "Ajuster les pieds pour qu'ils soient à plat sur le sol, éviter de les croiser.",
+                        eleve: "Repositionner les pieds pour s'assurer qu'ils sont à plat et non croisés.",
+                        tresEleve: "Placer immédiatement les pieds à plat sur le sol, utiliser un repose-pieds si nécessaire."
+                    }
                 }
             },
             ar: {
                 title: "نظام تحليل الوضعية المتقدم",
                 startButton: "بدء التحليل",
                 switchButton: "تبديل الكاميرا",
+                tableButton: "جدول",
+                modalTitle: "مستويات المخاطر والحلول",
                 postureStatusLabel: "حالة الوضعية: ",
                 feedbackLabel: "تعليقات الوضعية:",
                 waiting: "في انتظار التحليل...",
@@ -350,6 +567,80 @@
                         eleve: " (مرتفع)",
                         tresEleve: " (عالٍ جدًا)"
                     }
+                },
+                solutions: {
+                    head: {
+                        acceptable: "الحفاظ على وضعية الرأس الحالية، مع الحفاظ على محاذاتها مع العمود الفقري.",
+                        faible: "ضبط الرأس قليلاً لمحاذاته مع العمود الفقري وتجنب الميل للأمام.",
+                        eleve: "إعادة وضع الرأس مباشرة فوق الأكتاف، تجنب الميل للأمام.",
+                        tresEleve: "تصحيح وضعية الرأس فورًا، استشارة أخصائي الوضعية إذا استمرت."
+                    },
+                    neck: {
+                        acceptable: "الحفاظ على الرقبة مسترخية ومحاذية للعمود الفقري.",
+                        faible: "تصحيح الرقبة بلطف لتقليل الميل أو الالتواء.",
+                        eleve: "تصحيح محاذاة الرقبة لتكون في خط مع العمود الفقري، تجنب الالتواء.",
+                        tresEleve: "ضبط وضعية الرقبة فورًا، التفكير في دعم مريح أو استشارة مهنية."
+                    },
+                    shoulders: {
+                        acceptable: "الحفاظ على الأكتاف مسترخية وعلى ارتفاع متساوٍ.",
+                        faible: "خفض الأكتاف قليلاً والحفاظ عليها مسترخية.",
+                        eleve: "ضبط الأكتاف لتكون متساوية ومسترخية، تجنب رفعها أو توترها.",
+                        tresEleve: "إرخاء الأكتاف وتسويتها بشكل عاجل، التفكير في العلاج الطبيعي إذا لزم الأمر."
+                    },
+                   arms: {
+                        acceptable: "الحفاظ على الذراعين بزاوية مريحة بين 90-110 درجات.",
+                        faible: "ضبط وضعية الذراعين للحفاظ على زاوية 90-110 درجات مع الساعدين.",
+                        eleve: "إعادة وضع الذراعين لتجنب التمدد أو الرفع الزائد.",
+                        tresEleve: "تصحيح وضعية الذراعين فورًا، استخدام مساند الذراع للدعم."
+                    },
+                    forearms: {
+                        acceptable: "الحفاظ على الساعدين أفقيين أو مائلين قليلاً مع الدعم.",
+                        faible: "ضبط الساعدين قليلاً ليكونا أفقيين ومدعومين.",
+                        eleve: "إعادة وضع الساعدين ليستقرا على سطح، تجنب التعليق.",
+                        tresEleve: "ضبط الساعدين فورًا إلى وضعية أفقية مدعومة."
+                    },
+                    wrists: {
+                        acceptable: "الحفاظ على المعصمين في وضع محايد ومحاذيين للساعدين.",
+                        faible: "ضبط المعصمين للحفاظ على وضعية محايدة.",
+                        eleve: "تصحيح محاذاة المعصمين لتجنب الانثناء الزائد.",
+                        tresEleve: "إعادة وضع المعصمين فورًا إلى وضع محايد، التفكير في دعامات المعصم."
+                    },
+                    hands: {
+                        acceptable: "الحفاظ على اليدين مسترخيتين مع أصابع مرتاحة.",
+                        faible: "إرخاء اليدين لتقليل التوتر في الأصابع.",
+                        eleve: "ضبط وضعية اليدين لتجنب التشنج أو التوتر.",
+                        tresEleve: "إرخاء اليدين فورًا، التفكير في أدوات مريحة أو استشارة."
+                    },
+                    back: {
+                        acceptable: "الحفاظ على ظهر مستقيم محاذٍ للحوض.",
+                        faible: "تصحيح الظهر قليلاً لمحاذاته مع الحوض.",
+                        eleve: "تصحيح وضعية الظهر لتجنب الميل للأمام أو الالتواء.",
+                        tresEleve: "تصحيح الظهر فورًا، التفكير في دعم قطني أو مساعدة مهنية."
+                    },
+                    pelvis: {
+                        acceptable: "الحفاظ على الحوض محاذٍ للجذع.",
+                        faible: "ضبط الحوض قليلاً لمحاذاته مع الجذع.",
+                        eleve: "إعادة وضع الحوض للحفاظ على المحاذاة مع العمود الفقري.",
+                        tresEleve: "تصحيح محاذاة الحوض فورًا، التفكير في مقعد مريح."
+                    },
+                    thighs: {
+                        acceptable: "الحفاظ على الفخذين أفقيين عند الجلوس.",
+                        faible: "ضبط الفخذين لتكون أكثر أفقية عند الجلوس.",
+                        eleve: "إعادة وضع الفخذين للتأكد من أنها أفقية ومدعومة.",
+                        tresEleve: "ضبط وضعية الفخذين فورًا، استخدام دعم مقعد مناسب."
+                    },
+                    knees: {
+                        acceptable: "الحفاظ على الركبتين بزاوية 90 درجة عند الجلوس.",
+                        faible: "ضبط الركبتين قليلاً للحفاظ على زاوية 90 درجة.",
+                        eleve: "إعادة وضع الركبتين لتحقيق زاوية 90 درجة عند الجلوس.",
+                        tresEleve: "تصحيح زاوية الركبتين فورًا، التأكد من ارتفاع المقعد المناسب."
+                    },
+                    feet: {
+                        acceptable: "الحفاظ على القدمين مسطحتين على الأرض، غير متقاطعتين.",
+                        faible: "ضبط القدمين لتكون مسطحتين على الأرض، تجنب التقاطع.",
+                        eleve: "إعادة وضع القدمين للتأكد من أنها مسطحة وغير متقاطعة.",
+                        tresEleve: "وضع القدمين مسطحتين على الأرض فورًا، استخدام مسند قدم إذا لزم الأمر."
+                    }
                 }
             }
         };
@@ -362,8 +653,69 @@
             document.getElementById('title').textContent = t.title;
             document.getElementById('startButton').textContent = t.startButton;
             document.getElementById('switchButton').textContent = t.switchButton;
+            document.getElementById('tableButton').textContent = t.tableButton;
             document.getElementById('postureStatusLabel').innerHTML = `${t.postureStatusLabel}<span id="postureStatus">${t.waiting}</span>`;
             document.getElementById('feedbackLabel').textContent = t.feedbackLabel;
+            document.getElementById('modalTitle').textContent = t.modalTitle;
+        }
+
+        function showRiskTables() {
+            const modal = document.getElementById('riskModal');
+            const riskTables = document.getElementById('riskTables');
+            const t = translations[currentLanguage];
+            riskTables.innerHTML = '';
+
+            const components = [
+                { key: 'head', label: t.components.head },
+                { key: 'neck', label: t.components.neck },
+                { key: 'shoulders', label: t.components.shoulders },
+                { key: 'arms', label: t.components.arms },
+                { key: 'forearms', label: t.components.forearms },
+                { key: 'wrists', label: t.components.wrists },
+                { key: 'hands', label: t.components.hands },
+                { key: 'back', label: t.components.back },
+                { key: 'pelvis', label: t.components.pelvis },
+                { key: 'thighs', label: t.components.thighs },
+                { key: 'knees', label: t.components.knees },
+                { key: 'feet', label: t.components.feet }
+            ];
+
+            components.forEach(({ key, label }) => {
+                const table = document.createElement('table');
+                table.innerHTML = `
+                    <thead>
+                        <tr>
+                            <th>${label}</th>
+                            <th>${t.details.severity.acceptable.replace(' (', '').replace(')', '')}</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td>${t.details.severity.acceptable}</td>
+                            <td>${t.solutions[key].acceptable}</td>
+                        </tr>
+                        <tr>
+                            <td>${t.details.severity.faible}</td>
+                            <td>${t.solutions[key].faible}</td>
+                        </tr>
+                        <tr>
+                            <td>${t.details.severity.eleve}</td>
+                            <td>${t.solutions[key].eleve}</td>
+                        </tr>
+                        <tr>
+                            <td>${t.details.severity.tresEleve}</td>
+                            <td>${t.solutions[key].tresEleve}</td>
+                        </tr>
+                    </tbody>
+                `;
+                riskTables.appendChild(table);
+            });
+
+            modal.style.display = 'block';
+        }
+
+        function closeRiskModal() {
+            document.getElementById('riskModal').style.display = 'none';
         }
 
         const videoElement = document.getElementById('video');
